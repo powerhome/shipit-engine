@@ -348,7 +348,7 @@ module Shipit
       File.join(base_path, "git")
     end
 
-    def acquire_git_cache_lock(timeout: 15, &block)
+    def acquire_git_cache_lock(timeout: 60, &block)
       Flock.new(git_path.to_s + '.lock').lock(timeout: timeout, &block)
     end
 
