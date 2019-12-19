@@ -41,6 +41,8 @@ module Shipit
     belongs_to :repository
     validates_associated :repository
 
+    scope :not_archived, -> { where(archived_since: nil) }
+
     def repository
       super || build_repository
     end
@@ -405,6 +407,18 @@ module Shipit
 
     def unlock
       update!(lock_reason: nil, lock_author: nil, locked_since: nil)
+    end
+
+    def archived?
+      archived_since.present?
+    end
+
+    def archive!(user)
+      update!(archived_since: Time.now, lock_reason: "Archived", lock_author: user)
+    end
+
+    def unarchive!
+      update!(archived_since: nil, lock_reason: nil, lock_author: nil, locked_since: nil)
     end
 
     def to_param
