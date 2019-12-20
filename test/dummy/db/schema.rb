@@ -195,6 +195,7 @@ ActiveRecord::Schema.define(version: 2019_12_19_205202) do
     t.string "name", limit: 39, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "provision_pr_stacks", default: false
     t.index ["owner", "name"], name: "repository_unicity", unique: true
   end
 
