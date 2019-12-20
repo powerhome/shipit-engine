@@ -2,12 +2,12 @@ module Shipit
   module Webhooks
     class << self
       attr_accessor :extra_handlers
+    end
 
-      extra_handlers = []
+    self.extra_handlers = []
 
-      def register_handler(&block)
-        extra_handlers << block
-      end
+    def self.register_handler(&block)
+      self.extra_handlers << block
     end
   end
 end
