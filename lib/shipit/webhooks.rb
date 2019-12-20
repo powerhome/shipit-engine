@@ -5,7 +5,7 @@ module Shipit
 
       extra_handlers = []
 
-      def self.register_handler(&block)
+      def register_handler(&block)
         extra_handlers << block
       end
     end
