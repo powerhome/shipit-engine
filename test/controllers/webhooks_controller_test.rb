@@ -7,6 +7,17 @@ module Shipit
       GithubHook.any_instance.stubs(:verify_signature).returns(true)
     end
 
+    test "create github repository which is not yet present in the datastore" do
+      request.headers['X-Github-Event'] = 'push'
+      unknown_repo_payload = JSON.parse(payload(:push_master))
+      unknown_repo_payload["repository"]["full_name"] = "owner/unknown-repository"
+      unknown_repo_payload = unknown_repo_payload.to_json
+
+      assert_nothing_raised do
+        post :create, body: unknown_repo_payload, as: :json
+      end
+    end
+
     test ":push with the target branch queues a GithubSyncJob" do
       request.headers['X-Github-Event'] = 'push'
 
@@ -143,16 +154,14 @@ module Shipit
     end
 
     test "other events trigger custom handlers" do
-      received_webhooks = []
-      Shipit::WebhooksController.register_handler do |type, params|
-        received_webhooks << [type, params]
-      end
+      event = 'pull_request'
+      mock_handler = mock
+      mock_handler.expects(:call).with(pull_request_params.stringify_keys).once
+      Shipit::Webhooks.register_handler(event, mock_handler)
 
-      @request.headers['X-Github-Event'] = 'pull_request'
+      @request.headers['X-Github-Event'] = event
       post :create, body: pull_request_params.to_json, as: :json
       assert_response :ok
-
-      assert_equal [['pull_request', pull_request_params.stringify_keys]], received_webhooks
     end
 
     private

@@ -43,6 +43,8 @@ module Shipit
 
     include DeferredTouch
     deferred_touch repository: :updated_at
+    
+    scope :not_archived, -> { where(archived_since: nil) }
 
     def repository
       super || build_repository
@@ -54,11 +56,6 @@ module Shipit
 
     def lock_author=(user)
       super(user&.logged_in? ? user : nil)
-    end
-
-    def self.repo(full_name)
-      repo_owner, repo_name = full_name.downcase.split('/')
-      Repository.find_by(owner: repo_owner, name: repo_name).stacks
     end
 
     before_validation :update_defaults
@@ -408,6 +405,18 @@ module Shipit
 
     def unlock
       update!(lock_reason: nil, lock_author: nil, locked_since: nil)
+    end
+
+    def archived?
+      archived_since.present?
+    end
+
+    def archive!(user)
+      update!(archived_since: Time.now, lock_reason: "Archived", lock_author: user)
+    end
+
+    def unarchive!
+      update!(archived_since: nil, lock_reason: nil, lock_author: nil, locked_since: nil)
     end
 
     def to_param
