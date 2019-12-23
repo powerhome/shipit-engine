@@ -13,6 +13,14 @@ module Shipit
 
         Shipit::Webhooks.reset_handler_registry
       end
+
+      test "unknown events have no handlers" do
+        event = '_'
+
+        handlers = Shipit::Webhooks.for_event(event)
+
+        assert_equal [], handlers
+      end
     end
   end
 end

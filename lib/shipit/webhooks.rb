@@ -26,7 +26,7 @@ module Shipit
     end
 
     def self.for_event(event)
-      handlers[event]
+      handlers.fetch(event) { [] }
     end
   end
 end
