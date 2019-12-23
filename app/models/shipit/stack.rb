@@ -41,6 +41,9 @@ module Shipit
     belongs_to :repository
     validates_associated :repository
 
+    include DeferredTouch
+    deferred_touch repository: :updated_at
+    
     scope :not_archived, -> { where(archived_since: nil) }
 
     def repository
