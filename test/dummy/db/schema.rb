@@ -10,7 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema.define(version: 2020_01_02_175621) do
+=======
+ActiveRecord::Schema.define(version: 2020_01_02_191658) do
+>>>>>>> 4a1285d7... Adds concept of extra variable to stack
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -99,6 +103,15 @@ ActiveRecord::Schema.define(version: 2020_01_02_175621) do
     t.datetime "updated_at", null: false
     t.index ["hook_id", "event", "status"], name: "index_deliveries_on_hook_id_and_event_and_status"
     t.index ["hook_id", "status"], name: "index_deliveries_on_hook_id_and_status"
+  end
+
+  create_table "extra_variables", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "value", null: false
+    t.integer "stack_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["stack_id"], name: "index_extra_variables_on_stack_id"
   end
 
   create_table "github_hooks", force: :cascade do |t|
@@ -299,4 +312,5 @@ ActiveRecord::Schema.define(version: 2020_01_02_175621) do
     t.index ["updated_at"], name: "index_users_on_updated_at"
   end
 
+  add_foreign_key "extra_variables", "stacks"
 end
