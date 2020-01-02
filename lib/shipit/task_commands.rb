@@ -41,7 +41,7 @@ module Shipit
         'IGNORED_SAFETIES' => @task.ignored_safeties? ? '1' : '0',
         'GIT_COMMITTER_NAME' => @task.user&.name || Shipit.committer_name,
         'GIT_COMMITTER_EMAIL' => @task.user&.email || Shipit.committer_email,
-      ).merge(deploy_spec.machine_env).merge(@task.env)
+      ).merge(stack_extra_variables).merge(deploy_spec.machine_env).merge(@task.env)
     end
 
     def checkout(commit)
@@ -77,6 +77,12 @@ module Shipit
         File.join(@task.working_directory, sub_directory)
       else
         @task.working_directory
+      end
+    end
+
+    def stack_extra_variables
+      @stack.extra_variables.inject({}) do |hash, ev|
+        hash.merge!(ev.key => ev.value)
       end
     end
   end
