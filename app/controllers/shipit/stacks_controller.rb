@@ -103,6 +103,16 @@ module Shipit
         end
       end
 
+      if params[:stack][:extra_variables].present?
+        extra_variables = params[:stack][:extra_variables].values.map do |ev|
+          ExtraVariable.new(key: ev[:key], value: ev[:value])
+        end
+
+        unless @stack.extra_variables.replace(extra_variables)
+          options = {flash: {warning: @stack.errors.full_messages.to_sentence}}
+        end
+      end
+
       redirect_to(params[:return_to].presence || stack_settings_path(@stack), options)
     end
 

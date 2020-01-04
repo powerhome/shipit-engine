@@ -42,6 +42,27 @@
     </div>
 
     <div class="setting-section">
+      <h5>Extra variables</h5>
+
+      <p>Extra variables that are going to be passed during the execution of you deployment script.</p>
+      <%= form_for @stack do |f| %>
+        <div class="field-list">
+          <% @stack.extra_variables.each do |extra_var| %>
+            <div class="field-wrapper">
+              <%= f.fields_for "extra_variables[#{extra_var[:id]}]", extra_var do |ev| %>
+                <%= ev.text_field :key, placeholder: 'KEY' %>
+                <%= ev.text_field :value, placeholder: 'VALUE' %>
+                <a href="javascript:;" id="remove-variable">Remove Variable</a>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <a href="javascript:;" id="add-new-variable">Add Variable</a>
+        <%= f.submit class: "btn btn-primary", value: "Save Extra Variables" %>
+      <% end %>
+    </div>
+
+    <div class="setting-section">
       <h5>Lock deploys</h5>
       <%= form_for @stack do |f| %>
         <div class="field-wrapper">
