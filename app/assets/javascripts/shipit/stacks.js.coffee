@@ -25,11 +25,11 @@ $document.on 'click', '.action-set-release-status', (event) ->
 $document.on 'click', '#add-new-variable', (event) ->
   event.preventDefault()
   $form = $(event.target).closest('form').find('.field-list')
-  fieldsCount = $form.find(".field-wrapper").length
-  $form.append("<div class=\"field-wrapper\">" +
-    "<input placeholder=\"KEY\" type=\"text\" name=\"stack[extra_variables[" + fieldsCount + "]][key]\" id=\"stack_extra_variables_" + fieldsCount + "__key\">" +
-    "<input placeholder=\"VALUE\" type=\"text\" name=\"stack[extra_variables[" + fieldsCount + "]][value]\" id=\"stack_extra_variables_" + fieldsCount + "__value\">" +
-  "</div>")
+  nextFieldIndex = $form.find(".field-wrapper").length + 1
+
+  templateHtml = $("#stack-variable-form-item").html().replace(/{{index}}/g, nextFieldIndex)
+
+  $form.append(templateHtml)
 
 $document.on 'click', '#remove-variable', (event) ->
   event.preventDefault()

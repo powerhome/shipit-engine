@@ -59,6 +59,13 @@
         </div>
         <a href="javascript:;" id="add-new-variable">Add Variable</a>
         <%= f.submit class: "btn btn-primary", value: "Save Extra Variables" %>
+
+        <script id="stack-variable-form-item" type="text/template">
+          <div class="field-wrapper">
+            <input placeholder="KEY" type="text" name="stack[extra_variables[{{index}}]][key]" id="stack_extra_variables_{{index}}__key">
+            <input placeholder="VALUE" type="text" name="stack[extra_variables[{{index}}]][value]" id="stack_extra_variables_{{index}}__value">
+          </div>
+        </script>
       <% end %>
     </div>
 
