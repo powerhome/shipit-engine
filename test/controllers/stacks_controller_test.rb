@@ -158,6 +158,26 @@ module Shipit
       assert_instance_of AnonymousUser, @stack.lock_author
     end
 
+    test "#update allows to update stack extra variables" do
+      assert @stack.extra_variables.any?
+
+      extra_vars = [
+        ExtraVariable.new(key: Faker::Alphanumeric.alpha(number: 10).upcase, value: Faker::Alphanumeric.alpha(number: 10).upcase),
+        ExtraVariable.new(key: Faker::Alphanumeric.alpha(number: 10).upcase, value: Faker::Alphanumeric.alpha(number: 10).upcase),
+        ExtraVariable.new(key: Faker::Alphanumeric.alpha(number: 10).upcase, value: Faker::Alphanumeric.alpha(number: 10).upcase),
+      ]
+      extra_vars_params = extra_vars.each_with_index.inject({}) do |hash, pair|
+        element, index = pair
+        hash.merge!(index.to_s => element.attributes.extract!("key", "value"))
+      end
+
+      patch :update, params: { id: @stack.to_param, stack: { extra_variables: extra_vars_params } }
+
+      @stack.reload
+
+      assert_object_keys extra_vars, @stack.extra_variables, :key, :value
+    end
+
     test "#refresh queues a RefreshStatusesJob and a GithubSyncJob" do
       request.env['HTTP_REFERER'] = stack_settings_path(@stack)
 
