@@ -21,4 +21,11 @@
   .hidden {
     display: none;
   }
+
+  .field-list {
+    input[type=text] {
+      display: inline;
+      width: 200px;
+    }
+  }
 }
