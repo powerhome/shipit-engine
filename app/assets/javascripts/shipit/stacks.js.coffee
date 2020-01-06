@@ -27,7 +27,7 @@ $document.on 'click', '#add-new-variable', (event) ->
   $form = $(event.target).closest('form').find('.field-list')
   nextFieldIndex = $form.find(".field-wrapper").length + 1
 
-  templateHtml = $("#stack-variable-form-item").html().replace(/{{index}}/g, nextFieldIndex)
+  templateHtml = document.querySelector("template[id='stack-variable-form-input']").innerHTML.replace(/{{index}}/g, nextFieldIndex)
 
   $form.append(templateHtml)
 
