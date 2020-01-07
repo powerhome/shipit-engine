@@ -54,9 +54,17 @@ module Shipit
     def create
       @stack = Stack.new(create_params)
       @stack.repository = repository
+
       unless @stack.save
         flash[:warning] = @stack.errors.full_messages.to_sentence
       end
+
+      stack_extra_variables = extra_variables.map { |ev| ExtraVariable.new(key: ev[:key], value: ev[:value]) }
+
+      unless @stack.extra_variables.replace(stack_extra_variables)
+        options = {flash: {warning: @stack.errors.full_messages.to_sentence}}
+      end
+
       respond_with(@stack)
     end
 
