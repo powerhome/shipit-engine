@@ -24,11 +24,10 @@ $document.on 'click', '.action-set-release-status', (event) ->
 
 $document.on 'click', '#add-new-variable', (event) ->
   event.preventDefault()
-  $form = $(event.target).closest('form').find('.field-list')
+  formFields = $(event.target).closest('form').find('.field-list')[0]
+  template = document.querySelector("template[id='stack-variable-form-input']")
 
-  templateHtml = document.querySelector("template[id='stack-variable-form-input']").innerHTML
-
-  $form.append(templateHtml)
+  formFields.appendChild(document.importNode(template.content, true))
 
 $document.on 'change', '#stack_extra_variables__key', (event) ->
   allOcurrences = (items, element) ->
@@ -59,8 +58,8 @@ $document.on 'change', '#stack_extra_variables__key', (event) ->
 
 $document.on 'click', '#remove-variable', (event) ->
   event.preventDefault()
-  $form = $(event.target).closest('div')
-  $form.remove()
+  formField = $(event.target).closest('div')[0]
+  formField.parentNode.removeChild(formField)
 
 jQuery ($) ->
   displayIgnoreCiMessage = ->
