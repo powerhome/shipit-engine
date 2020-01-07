@@ -25,9 +25,8 @@ $document.on 'click', '.action-set-release-status', (event) ->
 $document.on 'click', '#add-new-variable', (event) ->
   event.preventDefault()
   $form = $(event.target).closest('form').find('.field-list')
-  nextFieldIndex = $form.find(".field-wrapper").length + 1
 
-  templateHtml = document.querySelector("template[id='stack-variable-form-input']").innerHTML.replace(/{{index}}/g, nextFieldIndex)
+  templateHtml = document.querySelector("template[id='stack-variable-form-input']").innerHTML
 
   $form.append(templateHtml)
 

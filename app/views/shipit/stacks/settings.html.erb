@@ -37,33 +37,27 @@
           <%= f.label :ignore_ci, "Don't require CI to deploy" %>
         </div>
 
-        <%= f.submit class: "btn", value: "Save" %>
-      <% end %>
-    </div>
-
-    <div class="setting-section">
-      <h5>Extra variables</h5>
-
-      <p>Extra variables that are going to be passed during the execution of your deployment script.</p>
-      <%= form_for @stack do |f| %>
         <div class="field-list">
+          <div class="field-wrapper">
+            <%= f.label :extra_variables, 'Extra variables (parameters to be sent during the execution of the deployment script)' %>
+          </div>
+          <div class="field-wrapper">
+            <a href="javascript:;" id="add-new-variable" class="btn">Add Variable</a>
+          </div>
           <% @stack.extra_variables.each do |extra_var| %>
             <div class="field-wrapper">
-              <%= f.fields_for "extra_variables[#{extra_var[:id]}]", extra_var do |ev| %>
-                <%= ev.text_field :key, placeholder: 'KEY' %>
-                <%= ev.text_field :value, placeholder: 'VALUE' %>
+                <%= text_field_tag "stack[extra_variables[][key]]", extra_var.key, placeholder: "KEY" %>
+                <%= text_field_tag "stack[extra_variables[][value]]", extra_var.value, placeholder: "VALUE" %>
                 <a href="javascript:;" id="remove-variable" class="btn">Remove Variable</a>
-              <% end %>
             </div>
           <% end %>
         </div>
-        <a href="javascript:;" id="add-new-variable" class="btn">Add Variable</a>
-        <%= f.submit class: "btn btn-primary", value: "Save Extra Variables" %>
+        <%= f.submit class: "btn", value: "Save" %>
       <% end %>
       <template id="stack-variable-form-input">
         <div class="field-wrapper">
-          <input placeholder="KEY" type="text" name="stack[extra_variables[{{index}}]][key]" id="stack_extra_variables_{{index}}__key">
-          <input placeholder="VALUE" type="text" name="stack[extra_variables[{{index}}]][value]" id="stack_extra_variables_{{index}}__value">
+          <input placeholder="KEY" type="text" name="stack[extra_variables[][key]" id="stack_extra_variables__key">
+          <input placeholder="VALUE" type="text" name="stack[extra_variables[][value]" id="stack_extra_variables__value">
           <a href="javascript:;" id="remove-variable" class="btn">Remove Variable</a>
         </div>
       </template>

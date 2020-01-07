@@ -166,10 +166,7 @@ module Shipit
         ExtraVariable.new(key: Faker::Alphanumeric.alpha(number: 10).upcase, value: Faker::Alphanumeric.alpha(number: 10).upcase),
         ExtraVariable.new(key: Faker::Alphanumeric.alpha(number: 10).upcase, value: Faker::Alphanumeric.alpha(number: 10).upcase),
       ]
-      extra_vars_params = extra_vars.each_with_index.inject({}) do |hash, pair|
-        element, index = pair
-        hash.merge!(index.to_s => element.attributes.extract!("key", "value"))
-      end
+      extra_vars_params = extra_vars.map { |element| element.attributes.extract!("key", "value") }
 
       patch :update, params: { id: @stack.to_param, stack: { extra_variables: extra_vars_params } }
 
