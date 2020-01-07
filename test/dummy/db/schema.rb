@@ -10,11 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-<<<<<<< HEAD
-ActiveRecord::Schema.define(version: 2020_01_02_175621) do
-=======
 ActiveRecord::Schema.define(version: 2020_01_02_191658) do
->>>>>>> 4a1285d7... Adds concept of extra variable to stack
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
