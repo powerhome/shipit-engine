@@ -1,0 +1,22 @@
+<div class="field-list">
+  <div class="field-wrapper">
+    <%= label_tag :extra_variables, 'Extra variables (parameters to be sent during the execution of the deployment script)' %>
+  </div>
+  <div class="field-wrapper">
+    <a href="javascript:;" id="add-new-variable" class="btn">Add Variable</a>
+  </div>
+  <% @stack.extra_variables.each do |extra_var| %>
+    <div class="field-wrapper">
+        <%= text_field_tag "stack[extra_variables[][key]]", extra_var.key, placeholder: "KEY" %>
+        <%= text_field_tag "stack[extra_variables[][value]]", extra_var.value, placeholder: "VALUE" %>
+        <a href="javascript:;" id="remove-variable" class="btn">Remove Variable</a>
+    </div>
+  <% end %>
+</div>
+<template id="stack-variable-form-input">
+  <div class="field-wrapper">
+    <input placeholder="KEY" type="text" name="stack[extra_variables[][key]" id="stack_extra_variables__key">
+    <input placeholder="VALUE" type="text" name="stack[extra_variables[][value]" id="stack_extra_variables__value">
+    <a href="javascript:;" id="remove-variable" class="btn">Remove Variable</a>
+  </div>
+</template>
