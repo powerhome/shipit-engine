@@ -307,6 +307,4 @@ ActiveRecord::Schema.define(version: 2020_01_02_191658) do
     t.index ["login"], name: "index_users_on_login"
     t.index ["updated_at"], name: "index_users_on_updated_at"
   end
-
-  add_foreign_key "extra_variables", "stacks"
 end
