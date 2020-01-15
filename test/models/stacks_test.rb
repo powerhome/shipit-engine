@@ -687,6 +687,10 @@ module Shipit
     test "stacks can be marked auto-provisioned" do
       @stack.update!(auto_provisioned: true)
       assert @stack.auto_provisioned?
+    end
+
+    test "auto-provisioned stacks can be listed" do
+      @stack.update!(auto_provisioned: true)
       assert_equal [@stack], Shipit::Stack.auto_provisioned
     end
 
