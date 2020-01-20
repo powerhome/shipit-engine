@@ -57,7 +57,7 @@ module Shipit
     belongs_to :stack, required: false
     has_many :deliveries
 
-    validates :delivery_url, presence: true, url: {no_local: true, allow_blank: true}
+    validates :delivery_url, presence: true
     validates :content_type, presence: true, inclusion: {in: CONTENT_TYPES.keys}
     validates :events, presence: true, subset: {of: EVENTS}
 
