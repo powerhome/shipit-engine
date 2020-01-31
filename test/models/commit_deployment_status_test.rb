@@ -37,5 +37,19 @@ module Shipit
 
       status.create_on_github!
     end
+
+    test 'includes deployment url when the deployment succeeds' do
+      deployment = shipit_commit_deployments(:shipit_deploy_second)
+
+      status = deployment.statuses.create!(status: 'success')
+      stack = status.stack
+      stack.deploy_url = "stack-deploy-url"
+      create_status_response = stub(id: 'abcd', url: 'https://github.com/status/abcd')
+      status.author.github_api.expects(:create_deployment_status).with do |*_args, **kwargs|
+        kwargs[:environment_url] == 'stack-deploy-url'
+      end.returns(create_status_response)
+
+      status.create_on_github!
+    end
   end
 end
