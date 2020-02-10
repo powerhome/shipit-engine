@@ -263,6 +263,9 @@ module Shipit
       self.merged_at = github_pull_request.merged_at
       self.base_ref = github_pull_request.base.ref
       self.base_commit = find_or_create_commit_from_github_by_sha!(github_pull_request.base.sha, detached: true)
+      self.user_login = user_by_github_login(github_pull_request.user.login)&.login
+      self.user_email = user_by_github_login(github_pull_request.user.login)&.email
+      self.user_name = user_by_github_login(github_pull_request.user.login)&.name
     end
 
     def merge_message
@@ -311,6 +314,10 @@ module Shipit
       end
     rescue ActiveRecord::RecordNotUnique
       retry
+    end
+
+    def user_by_github_login(login)
+      @user_by_github_login ||= User.find_by(login: login)
     end
   end
 end
