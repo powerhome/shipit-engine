@@ -263,6 +263,7 @@ module Shipit
       self.merged_at = github_pull_request.merged_at
       self.base_ref = github_pull_request.base.ref
       self.base_commit = find_or_create_commit_from_github_by_sha!(github_pull_request.base.sha, detached: true)
+      self.user_login = github_pull_request.user.login
     end
 
     def merge_message

@@ -110,6 +110,11 @@ module Shipit
             ref:  'default-branch',
             sha: base_sha,
           ),
+          user: stub(
+            id: 1234,
+            login: 'bob',
+            site_admin: false,
+          ),
         ),
       )
 
@@ -152,6 +157,7 @@ module Shipit
       assert_predicate pull_request, :mergeable?
       assert_predicate pull_request, :pending?
       assert_equal 'super-branch', pull_request.branch
+      assert_equal 'bob', pull_request.user_login
 
       assert_not_nil pull_request.head
       assert_predicate pull_request.head, :detached?
