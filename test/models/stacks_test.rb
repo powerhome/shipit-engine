@@ -261,11 +261,6 @@ module Shipit
     end
 
     test ".assigned_pull_request is nil by default" do
-      stack = Stack.create!(
-        repository: Repository.new(owner: "foo", name: "bar"),
-        environment: 'production',
-      )
-
       assert_nil @stack.assigned_pull_request
     end
 

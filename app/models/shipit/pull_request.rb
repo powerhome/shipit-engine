@@ -46,11 +46,11 @@ module Shipit
     deferred_touch stack: :updated_at
 
     validates :number, presence: true, uniqueness: {scope: :stack_id}
-
-    scope :waiting, -> { where(merge_status: WAITING_STATUSES) }
-    scope :pending, -> { where(merge_status: 'pending') }
+    scope :merge_request, -> { where.not(merge_requested_at: nil) }
+    scope :waiting, -> { merge_request.where(merge_status: WAITING_STATUSES) }
+    scope :pending, -> { merge_request.where(merge_status: 'pending') }
+    scope :queued, -> { merge_request.where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
     scope :to_be_merged, -> { pending.order(merge_requested_at: :asc) }
-    scope :queued, -> { where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
 
     after_save :record_merge_status_change
     after_commit :emit_hooks
