@@ -105,7 +105,7 @@ module Shipit
     end
 
     def merge_request?
-      !(merge_requested_by.nil? || merge_requested_at.nil?)
+      merge_requested_by.present? && merge_requested_at.present?
     end
 
     def self.schedule_merges
