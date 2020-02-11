@@ -8,6 +8,29 @@ module Shipit
       @user = shipit_users(:walrus)
     end
 
+    test ".assign_to_stack! creates a record and schedule a refresh" do
+      pull_request = nil
+      assert_enqueued_with(job: RefreshPullRequestJob) do
+        pull_request = PullRequest.assign_to_stack!(@stack, 100)
+      end
+      assert_predicate pull_request, :persisted?
+    end
+
+    test ".assign_to_stack! only track pull requests once" do
+      assert_difference -> { PullRequest.count }, +1 do
+        5.times { PullRequest.assign_to_stack!(@stack, 100) }
+      end
+    end
+
+    test ".merge_request? true when merge owner is defined" do
+      assert_equal true, @pr.merge_request?
+    end
+
+    test ".merge_request? false when merge owner is defined" do
+      @non_merge_request = shipit_pull_requests(:shipit_assigned)
+      assert_equal false, @non_merge_request.merge_request?
+    end
+
     test ".request_merge! creates a record and schedule a refresh" do
       pull_request = nil
       assert_enqueued_with(job: RefreshPullRequestJob) do
@@ -87,6 +110,11 @@ module Shipit
             ref:  'default-branch',
             sha: base_sha,
           ),
+          user: stub(
+            id: 1234,
+            login: 'bob',
+            site_admin: false,
+          ),
         ),
       )
 
@@ -129,6 +157,7 @@ module Shipit
       assert_predicate pull_request, :mergeable?
       assert_predicate pull_request, :pending?
       assert_equal 'super-branch', pull_request.branch
+      assert_equal 'bob', pull_request.user_login
 
       assert_not_nil pull_request.head
       assert_predicate pull_request.head, :detached?

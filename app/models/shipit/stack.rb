@@ -52,6 +52,10 @@ module Shipit
       super || build_repository
     end
 
+    def assigned_pull_request
+      pull_requests.where(merge_requested_by: nil).last || nil
+    end
+
     def lock_author(*)
       super || AnonymousUser.new
     end
@@ -84,6 +88,12 @@ module Shipit
     serialize :cached_deploy_spec, DeploySpec
     delegate :find_task_definition, :supports_rollback?, :links, :release_status?, :release_status_delay,
              :release_status_context, :supports_fetch_deployed_revision?, to: :cached_deploy_spec, allow_nil: true
+
+    def as_json(options = {})
+      super((options || {}).merge(
+        methods: [:assigned_pull_request],
+      ))
+    end
 
     def self.refresh_deployed_revisions
       find_each.select(&:supports_fetch_deployed_revision?).each(&:async_refresh_deployed_revision)

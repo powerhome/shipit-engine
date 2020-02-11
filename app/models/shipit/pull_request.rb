@@ -46,11 +46,11 @@ module Shipit
     deferred_touch stack: :updated_at
 
     validates :number, presence: true, uniqueness: {scope: :stack_id}
-
-    scope :waiting, -> { where(merge_status: WAITING_STATUSES) }
-    scope :pending, -> { where(merge_status: 'pending') }
+    scope :merge_request, -> { where.not(merge_requested_at: nil) }
+    scope :waiting, -> { merge_request.where(merge_status: WAITING_STATUSES) }
+    scope :pending, -> { merge_request.where(merge_status: 'pending') }
+    scope :queued, -> { merge_request.where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
     scope :to_be_merged, -> { pending.order(merge_requested_at: :asc) }
-    scope :queued, -> { where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
 
     after_save :record_merge_status_change
     after_commit :emit_hooks
@@ -104,6 +104,10 @@ module Shipit
       end
     end
 
+    def merge_request?
+      merge_requested_by.present? && merge_requested_at.present?
+    end
+
     def self.schedule_merges
       Shipit::Stack.where(merge_queue_enabled: true).find_each(&:schedule_merges)
     end
@@ -134,6 +138,17 @@ module Shipit
       end
       pull_request.update!(merge_requested_by: user.presence)
       pull_request.retry! if pull_request.rejected? || pull_request.canceled? || pull_request.revalidating?
+      pull_request.schedule_refresh!
+      pull_request
+    end
+
+    def self.assign_to_stack!(stack, number)
+      pull_request = PullRequest.find_or_create_by!(
+        stack: stack,
+        number: number,
+        merge_requested_at: nil,
+        merge_requested_by: nil,
+      )
       pull_request.schedule_refresh!
       pull_request
     end
@@ -248,6 +263,7 @@ module Shipit
       self.merged_at = github_pull_request.merged_at
       self.base_ref = github_pull_request.base.ref
       self.base_commit = find_or_create_commit_from_github_by_sha!(github_pull_request.base.sha, detached: true)
+      self.user_login = github_pull_request.user.login
     end
 
     def merge_message
