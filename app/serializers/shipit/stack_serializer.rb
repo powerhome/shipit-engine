@@ -4,8 +4,8 @@ module Shipit
 
     has_one :lock_author
     attributes :id, :repo_owner, :repo_name, :environment, :html_url, :url, :tasks_url, :deploy_url, :pull_requests_url,
-               :deploy_spec, :undeployed_commits_count, :is_locked, :lock_reason, :continuous_deployment, :created_at,
-               :updated_at, :locked_since, :last_deployed_at, :branch, :merge_queue_enabled, :is_archived,
+               :deploy_spec, :assigned_pull_request, :undeployed_commits_count, :is_locked, :lock_reason, :continuous_deployment,
+               :created_at, :updated_at, :locked_since, :last_deployed_at, :branch, :merge_queue_enabled, :is_archived,
                :archived_since
 
     def url
@@ -46,6 +46,10 @@ module Shipit
 
     def deploy_spec
       object.cached_deploy_spec.cacheable.config
+    end
+
+    def assigned_pull_request
+      object.assigned_pull_request
     end
   end
 end
