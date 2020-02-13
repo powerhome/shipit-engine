@@ -47,7 +47,7 @@ module Shipit
     deferred_touch stack: :updated_at
 
     validates :number, presence: true, uniqueness: {scope: :stack_id}
-    scope :merge_requests, -> { where.not(merge_requested_at: nil) }
+    scope :merge_requests, -> { where(review_request: [false, nil]) }
     scope :waiting, -> { merge_requests.where(merge_status: WAITING_STATUSES) }
     scope :pending, -> { merge_requests.where(merge_status: 'pending') }
     scope :queued, -> { merge_requests.where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
@@ -143,8 +143,7 @@ module Shipit
       pull_request = PullRequest.find_or_create_by!(
         stack: stack,
         number: number,
-        merge_requested_at: nil,
-        merge_requested_by: nil,
+        review_request: true,
       )
       pull_request.schedule_refresh!
       pull_request
