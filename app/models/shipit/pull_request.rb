@@ -42,14 +42,15 @@ module Shipit
     belongs_to :base_commit, class_name: 'Shipit::Commit', optional: true
     belongs_to :merge_requested_by, class_name: 'Shipit::User', optional: true
     has_one :merge_commit, class_name: 'Shipit::Commit'
+    belongs_to :user, optional: true
 
     deferred_touch stack: :updated_at
 
     validates :number, presence: true, uniqueness: {scope: :stack_id}
-    scope :merge_request, -> { where.not(merge_requested_at: nil) }
-    scope :waiting, -> { merge_request.where(merge_status: WAITING_STATUSES) }
-    scope :pending, -> { merge_request.where(merge_status: 'pending') }
-    scope :queued, -> { merge_request.where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
+    scope :merge_requests, -> { where(review_request: [false, nil]) }
+    scope :waiting, -> { merge_requests.where(merge_status: WAITING_STATUSES) }
+    scope :pending, -> { merge_requests.where(merge_status: 'pending') }
+    scope :queued, -> { merge_requests.where(merge_status: QUEUED_STATUSES).order(merge_requested_at: :asc) }
     scope :to_be_merged, -> { pending.order(merge_requested_at: :asc) }
 
     after_save :record_merge_status_change
@@ -104,10 +105,6 @@ module Shipit
       end
     end
 
-    def merge_request?
-      merge_requested_by.present? && merge_requested_at.present?
-    end
-
     def self.schedule_merges
       Shipit::Stack.where(merge_queue_enabled: true).find_each(&:schedule_merges)
     end
@@ -146,8 +143,7 @@ module Shipit
       pull_request = PullRequest.find_or_create_by!(
         stack: stack,
         number: number,
-        merge_requested_at: nil,
-        merge_requested_by: nil,
+        review_request: true,
       )
       pull_request.schedule_refresh!
       pull_request
@@ -251,6 +247,8 @@ module Shipit
     end
 
     def github_pull_request=(github_pull_request)
+      user = User.find_by(login: github_pull_request.user.login) || Shipit::AnonymousUser.new
+
       self.github_id = github_pull_request.id
       self.api_url = github_pull_request.url
       self.title = github_pull_request.title
@@ -263,9 +261,7 @@ module Shipit
       self.merged_at = github_pull_request.merged_at
       self.base_ref = github_pull_request.base.ref
       self.base_commit = find_or_create_commit_from_github_by_sha!(github_pull_request.base.sha, detached: true)
-      self.user_login = user_by_github_login(github_pull_request.user.login)&.login
-      self.user_email = user_by_github_login(github_pull_request.user.login)&.email
-      self.user_name = user_by_github_login(github_pull_request.user.login)&.name
+      self.user = user
     end
 
     def merge_message
@@ -314,10 +310,6 @@ module Shipit
       end
     rescue ActiveRecord::RecordNotUnique
       retry
-    end
-
-    def user_by_github_login(login)
-      @user_by_github_login ||= User.find_by(login: login)
     end
   end
 end

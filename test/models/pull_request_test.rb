@@ -22,15 +22,6 @@ module Shipit
       end
     end
 
-    test ".merge_request? true when merge owner is defined" do
-      assert_equal true, @pr.merge_request?
-    end
-
-    test ".merge_request? false when merge owner is defined" do
-      @non_merge_request = shipit_pull_requests(:shipit_assigned)
-      assert_equal false, @non_merge_request.merge_request?
-    end
-
     test ".request_merge! creates a record and schedule a refresh" do
       pull_request = nil
       assert_enqueued_with(job: RefreshPullRequestJob) do
@@ -89,6 +80,7 @@ module Shipit
 
     test "refresh! pulls state from GitHub" do
       pull_request = shipit_pull_requests(:shipit_fetching)
+      user = shipit_users(:bob)
 
       head_sha = '64b3833d39def7ec65b57b42f496eb27ab4980b6'
       base_sha = 'ba7ab50e02286f7d6c60c1ef75258133dd9ea763'
@@ -157,9 +149,7 @@ module Shipit
       assert_predicate pull_request, :mergeable?
       assert_predicate pull_request, :pending?
       assert_equal 'super-branch', pull_request.branch
-      assert_equal 'bob', pull_request.user_login
-      assert_equal 'Bob the Builder', pull_request.user_name
-      assert_equal 'bob@bob.com', pull_request.user_email
+      assert_equal user, pull_request.user
 
       assert_not_nil pull_request.head
       assert_predicate pull_request.head, :detached?
