@@ -63,6 +63,10 @@ module Shipit
       super || build_repository
     end
 
+    def review_pull_request
+      pull_requests.where(review_request: true).last || nil
+    end
+
     def lock_author(*)
       super || AnonymousUser.new
     end
