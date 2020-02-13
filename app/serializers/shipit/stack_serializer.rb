@@ -3,8 +3,10 @@ module Shipit
     include ConditionalAttributes
 
     has_one :lock_author
+    has_one :review_request
+
     attributes :id, :repo_owner, :repo_name, :environment, :html_url, :url, :tasks_url, :deploy_url, :pull_requests_url,
-               :deploy_spec, :review_pull_request, :undeployed_commits_count, :is_locked, :lock_reason,
+               :deploy_spec, :undeployed_commits_count, :is_locked, :lock_reason,
                :continuous_deployment, :created_at, :updated_at, :locked_since, :last_deployed_at, :branch,
                :merge_queue_enabled, :is_archived, :archived_since
 
@@ -46,10 +48,6 @@ module Shipit
 
     def deploy_spec
       object.cached_deploy_spec.cacheable.config
-    end
-
-    def review_pull_request
-      object.review_pull_request
     end
   end
 end

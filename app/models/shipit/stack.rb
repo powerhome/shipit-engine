@@ -39,16 +39,13 @@ module Shipit
     has_many :api_clients, dependent: :destroy
     belongs_to :lock_author, class_name: :User, optional: true
     belongs_to :repository
+    has_one :review_request, -> { where(review_request: true) }, class_name: "PullRequest"
     validates_associated :repository
 
     scope :not_archived, -> { where(archived_since: nil) }
 
     def repository
       super || build_repository
-    end
-
-    def review_pull_request
-      pull_requests.where(review_request: true).last || nil
     end
 
     def lock_author(*)
