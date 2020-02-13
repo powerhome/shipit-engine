@@ -15,15 +15,5 @@ module Shipit
         @job.perform(pull_request)
       end
     end
-
-    test "#perform call #refresh! pull_request does not schedule a merge when not a merge request" do
-      pull_request = shipit_pull_requests(:shipit_assigned)
-
-      PullRequest.any_instance.expects(:refresh!)
-
-      assert_no_enqueued_jobs do
-        @job.perform(pull_request)
-      end
-    end
   end
 end
