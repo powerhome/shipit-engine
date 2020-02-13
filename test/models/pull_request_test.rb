@@ -80,6 +80,7 @@ module Shipit
 
     test "refresh! pulls state from GitHub" do
       pull_request = shipit_pull_requests(:shipit_fetching)
+      user = shipit_users(:bob)
 
       head_sha = '64b3833d39def7ec65b57b42f496eb27ab4980b6'
       base_sha = 'ba7ab50e02286f7d6c60c1ef75258133dd9ea763'
@@ -148,9 +149,7 @@ module Shipit
       assert_predicate pull_request, :mergeable?
       assert_predicate pull_request, :pending?
       assert_equal 'super-branch', pull_request.branch
-      assert_equal 'bob', pull_request.user_login
-      assert_equal 'Bob the Builder', pull_request.user_name
-      assert_equal 'bob@bob.com', pull_request.user_email
+      assert_equal user, pull_request.user
 
       assert_not_nil pull_request.head
       assert_predicate pull_request.head, :detached?

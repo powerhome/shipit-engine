@@ -42,6 +42,7 @@ module Shipit
     belongs_to :base_commit, class_name: 'Shipit::Commit', optional: true
     belongs_to :merge_requested_by, class_name: 'Shipit::User', optional: true
     has_one :merge_commit, class_name: 'Shipit::Commit'
+    belongs_to :user, optional: true
 
     deferred_touch stack: :updated_at
 
@@ -247,7 +248,7 @@ module Shipit
     end
 
     def github_pull_request=(github_pull_request)
-      user = Shipit::User.find_by(login: github_pull_request.user.login) || Shipit::AnonymousUser.new
+      user = User.find_by(login: github_pull_request.user.login) || Shipit::AnonymousUser.new
 
       self.github_id = github_pull_request.id
       self.api_url = github_pull_request.url
@@ -261,9 +262,7 @@ module Shipit
       self.merged_at = github_pull_request.merged_at
       self.base_ref = github_pull_request.base.ref
       self.base_commit = find_or_create_commit_from_github_by_sha!(github_pull_request.base.sha, detached: true)
-      self.user_login = user.login
-      self.user_email = user.email
-      self.user_name = user.name
+      self.user = user
     end
 
     def merge_message
