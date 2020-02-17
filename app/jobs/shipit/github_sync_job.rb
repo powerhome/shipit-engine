@@ -26,7 +26,13 @@ module Shipit
     end
 
     def append_commit(gh_commit)
-      @stack.commits.create_from_github!(gh_commit)
+      if commit = @stack.commits.by_sha(gh_commit.sha)
+        return commit
+      else
+        @stack.commits.create_from_github!(gh_commit)
+      end
+    rescue ActiveRecord::RecordNotUnique
+      retry
     end
 
     def fetch_missing_commits(&block)
