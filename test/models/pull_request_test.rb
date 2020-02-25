@@ -156,6 +156,75 @@ module Shipit
       assert_predicate pull_request.head, :success?
     end
 
+    test "github_pull_request= creates Shipit::Users if we've not seen them before" do
+      pull_request = shipit_pull_requests(:shipit_fetching)
+      user = shipit_users(:bob)
+      user.destroy
+
+      head_sha = '64b3833d39def7ec65b57b42f496eb27ab4980b6'
+      base_sha = 'ba7ab50e02286f7d6c60c1ef75258133dd9ea763'
+      stubbed_github_pull_request =
+        stub(
+          id: 4_857_578,
+          url: 'https://api.github.com/repos/Shopify/shipit-engine/pulls/64',
+          title: 'Great feature',
+          state: 'open',
+          mergeable: true,
+          additions: 24,
+          deletions: 5,
+          merged_at: nil,
+          head: stub(
+            ref: 'super-branch',
+            sha: head_sha,
+          ),
+          base: stub(
+            ref:  'default-branch',
+            sha: base_sha,
+          ),
+          user: stub(
+            id: 1234,
+            login: 'bob',
+            site_admin: false,
+          ),
+        )
+
+      author = stub(
+        id: 1234,
+        login: 'bob',
+        name: 'Bob the Builder',
+        email: 'bob@bob.com',
+        avatar_url: 'avatar-url',
+        url: "github-user-url",
+      )
+
+      [head_sha, base_sha].each do |sha|
+        Shipit.github.api.expects(:commit).with(@stack.github_repo_name, sha).returns(
+          stub(
+            sha: sha,
+            author: author,
+            committer: author,
+            commit: stub(
+              message: 'Great feature',
+              author: stub(date: 1.day.ago),
+              committer: stub(date: 1.day.ago),
+            ),
+            stats: stub(
+              additions: 24,
+              deletions: 5,
+            ),
+          ),
+        )
+      end
+
+      Shipit.github.api.expects(:user).with(author.login).returns(author)
+
+      assert_difference -> { Shipit::User.count }, 1 do
+        pull_request.github_pull_request = stubbed_github_pull_request
+      end
+
+      assert_equal author.login, pull_request.user.login
+    end
+
     test "#reject! records the reason" do
       @pr.reject!('merge_conflict')
       assert_equal 'merge_conflict', @pr.rejection_reason

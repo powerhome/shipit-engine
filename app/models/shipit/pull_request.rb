@@ -247,7 +247,7 @@ module Shipit
     end
 
     def github_pull_request=(github_pull_request)
-      user = User.find_by(login: github_pull_request.user.login) || Shipit::AnonymousUser.new
+      user = User.find_or_create_by_login!(github_pull_request.user.login) || Shipit::AnonymousUser.new
 
       self.github_id = github_pull_request.id
       self.api_url = github_pull_request.url
