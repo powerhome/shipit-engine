@@ -158,7 +158,7 @@ module Shipit
       end
 
       if commit.deploy_failed? || (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
-         commit.recently_pushed?
+         commit.recently_pushed? || cached_deploy_spec.config.empty?
         continuous_delivery_delayed!
         return
       end
