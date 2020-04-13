@@ -476,7 +476,7 @@ module Shipit
 
     test "#trigger_continuous_delivery bails out if the stack isn't deployable" do
       Hook.stubs(:emit) # TODO: Once on rails 5, use assert_no_enqueued_jobs(only: Shipit::PerformTaskJob)
-      
+
       @stack.lock('yada yada yada', AnonymousUser.new)
       refute_predicate @stack, :deployable?
       refute_predicate @stack, :deployed_too_recently?
