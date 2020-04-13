@@ -476,7 +476,7 @@ module Shipit
 
     test "#trigger_continuous_delivery bails out if the stack isn't deployable" do
       Hook.stubs(:emit) # TODO: Once on rails 5, use assert_no_enqueued_jobs(only: Shipit::PerformTaskJob)
-
+      
       @stack.lock('yada yada yada', AnonymousUser.new)
       refute_predicate @stack, :deployable?
       refute_predicate @stack, :deployed_too_recently?
@@ -546,6 +546,22 @@ module Shipit
 
       assert_enqueued_with(job: Shipit::PerformTaskJob) do
         assert_difference -> { Deploy.count }, +1 do
+          @stack.trigger_continuous_delivery
+        end
+      end
+    end
+
+    test "#trigger_continuous_delivery bails out if no DeploySpec has been cached" do
+      @stack = shipit_stacks(:check_deploy_spec)
+      shipit_tasks(:canaries_running).delete
+      config = @stack.cached_deploy_spec.config
+
+      assert_predicate @stack, :deployable?
+      refute_predicate @stack, :deployed_too_recently?
+      assert_empty(config, "DeploySpec was not empty")
+
+      assert_no_enqueued_jobs(only: Shipit::PerformTaskJob) do
+        assert_no_difference -> { Deploy.count } do
           @stack.trigger_continuous_delivery
         end
       end
