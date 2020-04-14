@@ -168,20 +168,6 @@ module Shipit
       touch(:continuous_delivery_delayed_since) unless continuous_delivery_delayed?
     end
 
-    def should_delay_continuous_delivery?(commit)
-      commit.deploy_failed? ||
-        (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
-        commit.recently_pushed? ||
-        cached_deploy_spec.config.empty?
-    end
-
-    def should_resume_continuous_delivery?(commit)
-      !deployable? ||
-        deployed_too_recently? ||
-        commit.nil? ||
-        commit.deployed?
-    end
-
     def trigger_continuous_delivery
       commit = next_commit_to_deploy
 
@@ -620,6 +606,20 @@ module Shipit
 
     def ci_enabled_cache_key
       "stacks:#{id}:ci_enabled"
+    end
+
+    def should_delay_continuous_delivery?(commit)
+      commit.deploy_failed? ||
+        (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
+        commit.recently_pushed? ||
+        cached_deploy_spec.config.empty?
+    end
+
+    def should_resume_continuous_delivery?(commit)
+      !deployable? ||
+        deployed_too_recently? ||
+        commit.nil? ||
+        commit.deployed?
     end
   end
 end
