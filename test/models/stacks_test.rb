@@ -260,6 +260,23 @@ module Shipit
       Stack.run_deploy_in_foreground(stack: stack.to_param, revision: commit.sha)
     end
 
+    test ".review_request is nil by default" do
+      assert_nil @stack.review_request
+    end
+
+    test ".review_request returns nil when all pull requests are merge requests" do
+      @stack = shipit_stacks(:shipit)
+
+      assert_nil @stack.review_request
+    end
+
+    test ".review_request returns latest non merge request" do
+      @stack = shipit_stacks(:shipit)
+      @pull_request = PullRequest.create!(stack: @stack, number: "1", review_request: true)
+
+      assert @stack.review_request, @pull_request
+    end
+
     test "#active_task? is memoized" do
       assert_queries(1) do
         10.times { @stack.active_task? }
@@ -680,13 +697,34 @@ module Shipit
       assert_equal user, @stack.lock_author
     end
 
-    test "#unlock deletes reason and user" do
+    test "#lock can set a reason code" do
+      reason = "Here comes the walrus"
       user = shipit_users(:walrus)
-      @stack.lock("Here comes the walrus", user)
+      code = "STUFF"
+      @stack.lock(reason, user, code: code)
+      assert @stack.locked?
+      assert_equal code, @stack.lock_reason_code
+      assert_equal [@stack], Shipit::Stack.locked_because(code).all
+    end
+
+    test "#unlock deletes reason, user & reason code" do
+      user = shipit_users(:walrus)
+      @stack.lock("Here comes the walrus", user, code: "STUFF")
       @stack.unlock
       refute @stack.locked?
       assert_nil @stack.lock_reason
+      assert_nil @stack.lock_reason_code
       assert_not_equal user, @stack.lock_author
+    end
+
+    test "stacks can be marked auto-provisioned" do
+      @stack.update!(auto_provisioned: true)
+      assert @stack.auto_provisioned?
+    end
+
+    test "auto-provisioned stacks can be listed" do
+      @stack.update!(auto_provisioned: true)
+      assert_equal [@stack], Shipit::Stack.auto_provisioned
     end
 
     test "stack contains valid deploy_url" do
@@ -879,6 +917,41 @@ module Shipit
       end
     end
 
+    test "#links performs template substitutions" do
+      @stack.repo_name = "expected-repository-name"
+      @stack.environment = "expected-environment"
+      @stack.cached_deploy_spec = create_deploy_spec(
+        "links" => {
+          "logs" => "http://logs.$GITHUB_REPO_NAME.$ENVIRONMENT.domain.com",
+          "monitoring" => "https://graphs.$GITHUB_REPO_NAME.$ENVIRONMENT.domain.com",
+        },
+      )
+
+      assert_equal(
+        {
+          "logs" => "http://logs.expected-repository-name.expected-environment.domain.com",
+          "monitoring" => "https://graphs.expected-repository-name.expected-environment.domain.com",
+        },
+        @stack.links,
+      )
+    end
+
+    test "#env includes the stack's environment" do
+      expected_environment = {
+        'ENVIRONMENT' => @stack.environment,
+        'LAST_DEPLOYED_SHA' => @stack.last_deployed_commit.sha,
+        'GITHUB_REPO_OWNER' => @stack.repository.owner,
+        'GITHUB_REPO_NAME' => @stack.repository.name,
+        'DEPLOY_URL' => @stack.deploy_url,
+        'BRANCH' => @stack.branch,
+      }
+
+      assert_equal(
+        @stack.env,
+        expected_environment,
+      )
+    end
+
     private
 
     def generate_revert_commit(stack:, reverted_commit:, author: reverted_commit.author)
@@ -890,6 +963,10 @@ module Shipit
         authored_at: Time.zone.now,
         committed_at: Time.zone.now,
       )
+    end
+
+    def create_deploy_spec(spec)
+      Shipit::DeploySpec.new(spec.stringify_keys)
     end
   end
 end

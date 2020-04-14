@@ -79,6 +79,11 @@ module Shipit
       @authorized ||= Shipit.github_teams.empty? || teams.where(id: Shipit.github_teams.map(&:id)).exists?
     end
 
+    def repositories_contributed_to
+      return [] unless id
+      Stack.where(id: stacks_contributed_to).distinct.pluck(:repository_id)
+    end
+
     def stacks_contributed_to
       return [] unless id
       Commit.where('author_id = :id or committer_id = :id', id: id).distinct.pluck(:stack_id)
@@ -140,8 +145,9 @@ module Shipit
                   .sort_by { |e| e.primary ? 0 : 1 }
                   .map(&:email)
                   .find { |e| email_valid_and_preferred?(e) }
-      rescue Octokit::NotFound, Octokit::Forbidden
+      rescue Octokit::NotFound, Octokit::Forbidden, Octokit::Unauthorized
         # If the user hasn't agreed to the necessary permission, we can't access their private emails.
+        Rails.logger.warn("Failed to retrieve emails for user '#{github_user.name || github_user.login}'")
         nil
       end
     end

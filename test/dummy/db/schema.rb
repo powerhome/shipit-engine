@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_09_132519) do
+ActiveRecord::Schema.define(version: 2020_02_26_211925) do
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -158,7 +158,7 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.integer "deletions", default: 0, null: false
     t.string "merge_status", limit: 30, null: false
     t.string "rejection_reason"
-    t.datetime "merge_requested_at", null: false
+    t.datetime "merge_requested_at"
     t.integer "merge_requested_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -167,6 +167,8 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.datetime "merged_at"
     t.string "base_ref", limit: 1024
     t.integer "base_commit_id"
+    t.integer "user_id"
+    t.boolean "review_request", default: false
     t.index ["head_id"], name: "index_pull_requests_on_head_id"
     t.index ["merge_requested_by_id"], name: "index_pull_requests_on_merge_requested_by_id"
     t.index ["merge_status"], name: "index_pull_requests_on_merge_status"
@@ -174,6 +176,7 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.index ["stack_id", "merge_status"], name: "index_pull_requests_on_stack_id_and_merge_status"
     t.index ["stack_id", "number"], name: "index_pull_requests_on_stack_id_and_number", unique: true
     t.index ["stack_id"], name: "index_pull_requests_on_stack_id"
+    t.index ["user_id"], name: "index_pull_requests_on_user_id"
   end
 
   create_table "release_statuses", force: :cascade do |t|
@@ -196,6 +199,9 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.string "name", limit: 100, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "provision_pr_stacks", default: false
+    t.integer "provisioning_behavior", default: 0
+    t.string "provisioning_label_name"
     t.index ["owner", "name"], name: "repository_unicity", unique: true
   end
 
@@ -220,7 +226,11 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.datetime "last_deployed_at"
     t.integer "repository_id", null: false
     t.datetime "archived_since"
+    t.string "lock_reason_code"
+    t.boolean "auto_provisioned", default: false
     t.index ["archived_since"], name: "index_stacks_on_archived_since"
+    t.index ["auto_provisioned"], name: "index_stacks_on_auto_provisioned"
+    t.index ["lock_reason_code"], name: "index_stacks_on_lock_reason_code"
     t.index ["repository_id", "environment"], name: "stack_unicity", unique: true
     t.index ["repository_id"], name: "index_stacks_on_repository_id"
   end
@@ -265,6 +275,7 @@ ActiveRecord::Schema.define(version: 2020_01_09_132519) do
     t.index ["stack_id", "allow_concurrency", "status"], name: "index_active_tasks"
     t.index ["stack_id", "allow_concurrency"], name: "index_tasks_on_stack_id_and_allow_concurrency"
     t.index ["stack_id", "status", "type"], name: "index_tasks_by_stack_and_status"
+    t.index ["status"], name: "index_tasks_on_status"
     t.index ["type", "stack_id", "parent_id"], name: "index_tasks_by_stack_and_parent"
     t.index ["until_commit_id"], name: "index_tasks_on_until_commit_id"
     t.index ["user_id"], name: "index_tasks_on_user_id"

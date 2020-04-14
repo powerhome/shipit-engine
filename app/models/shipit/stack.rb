@@ -2,6 +2,8 @@ require 'fileutils'
 
 module Shipit
   class Stack < ActiveRecord::Base
+    NotYetSynced = Class.new(StandardError)
+
     module NoDeployedCommit
       extend self
 
@@ -39,9 +41,37 @@ module Shipit
     has_many :api_clients, dependent: :destroy
     belongs_to :lock_author, class_name: :User, optional: true
     belongs_to :repository
+    has_one :review_request, -> { where(review_request: true) }, class_name: "PullRequest"
     validates_associated :repository
 
     scope :not_archived, -> { where(archived_since: nil) }
+    scope :locked_because, ->(reason_code) { where(lock_reason_code: reason_code) }
+    scope :auto_provisioned, -> { where(auto_provisioned: true) }
+
+    include DeferredTouch
+    deferred_touch repository: :updated_at
+
+    def env
+      {
+        'ENVIRONMENT' => environment,
+        'LAST_DEPLOYED_SHA' => last_deployed_commit.sha,
+        'GITHUB_REPO_OWNER' => repository.owner,
+        'GITHUB_REPO_NAME' => repository.name,
+        'DEPLOY_URL' => deploy_url,
+        'BRANCH' => branch,
+      }
+    end
+
+    def env
+      {
+        'ENVIRONMENT' => environment,
+        'LAST_DEPLOYED_SHA' => last_deployed_commit.sha,
+        'GITHUB_REPO_OWNER' => repository.owner,
+        'GITHUB_REPO_NAME' => repository.name,
+        'DEPLOY_URL' => deploy_url,
+        'BRANCH' => branch,
+      }
+    end
 
     def repository
       super || build_repository
@@ -77,7 +107,7 @@ module Shipit
     validates :lock_reason, length: {maximum: 4096}
 
     serialize :cached_deploy_spec, DeploySpec
-    delegate :find_task_definition, :supports_rollback?, :links, :release_status?, :release_status_delay,
+    delegate :find_task_definition, :supports_rollback?, :release_status?, :release_status_delay,
              :release_status_context, :supports_fetch_deployed_revision?, to: :cached_deploy_spec, allow_nil: true
 
     def self.refresh_deployed_revisions
@@ -354,7 +384,7 @@ module Shipit
     end
 
     def github_repo_name
-      [repo_owner, repo_name].join('/')
+      repository.github_repo_name
     end
 
     def github_commits
@@ -397,13 +427,13 @@ module Shipit
       lock_reason.present?
     end
 
-    def lock(reason, user)
-      params = {lock_reason: reason, lock_author: user}
+    def lock(reason, user, code: nil)
+      params = {lock_reason: reason, lock_reason_code: code, lock_author: user}
       update!(params)
     end
 
     def unlock
-      update!(lock_reason: nil, lock_author: nil, locked_since: nil)
+      update!(lock_reason: nil, lock_reason_code: nil, lock_author: nil, locked_since: nil)
     end
 
     def archived?
@@ -411,11 +441,11 @@ module Shipit
     end
 
     def archive!(user)
-      update!(archived_since: Time.now, lock_reason: "Archived", lock_author: user)
+      update!(archived_since: Time.now, lock_reason: "Archived", lock_reason_code: "ARCHIVED", lock_author: user)
     end
 
     def unarchive!
-      update!(archived_since: nil, lock_reason: nil, lock_author: nil, locked_since: nil)
+      update!(archived_since: nil, lock_reason: nil, lock_reason_code: nil, lock_author: nil, locked_since: nil)
     end
 
     def to_param
@@ -526,6 +556,13 @@ module Shipit
 
     def sync_github
       GithubSyncJob.perform_later(stack_id: id)
+    end
+
+    def links
+      links_spec = cached_deploy_spec&.links || {}
+      context = EnvironmentVariables.with(env)
+
+      links_spec.transform_values { |url| context.interpolate(url) }
     end
 
     private

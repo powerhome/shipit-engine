@@ -1,6 +1,6 @@
 <% content_for :page_title do %>
   <span><%= stack.repo_owner %></span>
-  <h1><%= stack.repo_name %> <%= stack.environment %></h1>
+  <h1><%= stack.repo_name %> <%= stack.environment %><% if stack.auto_provisioned? %><span class="auto-provisioned" /><% end %></h1>
 <% end %>
 
 
@@ -21,6 +21,9 @@
     </li>
     <li class="nav__list__item">
       <%= link_to t('stack.nav.statistics'), stack_statistics_path(stack) %>
+    </li>
+    <li class="nav__list__item">
+      <%= link_to 'Repository', repository_path(stack.repository) %>
     </li>
     <% if stack.merge_queue_enabled? %>
       <li class="nav__list__item">
@@ -47,14 +50,21 @@
 
   <ul class="nav__list nav__list--secondary">
     <% if stack.links.present? %>
-      <% stack.links.each do |name, url| %>
-        <li class="nav__list__item">
-          <%= link_to name.humanize, url, :target => '_blank', :class => "#{name.dasherize}-url" %>
-        </li>
-      <% end %>
+      <li class="nav__list__item nav__list__item--has-children">
+
+        <%=  t('stack.nav.links') %>
+
+        <ul class="nav__sub__list">
+          <% stack.links.each do |name, url| %>
+            <li class="nav__list__sub__item">
+              <%= link_to name.humanize, url, :target => '_blank', :class => "#{name.dasherize}-url" %>
+            </li>
+          <% end %>
+        </ul>
+      </li>
     <% end %>
     <li class="nav__list__item">
-      <%= link_to t('stack.nav.view_on_github'), github_repo_url(stack.repo_owner, stack.repo_name) %>
+      <%= link_to t('stack.nav.view_on_github'), stack_github_url(stack) %>
     </li>
     <% if stack.deploy_url.present? %>
       <li class="nav__list__item">

@@ -35,7 +35,7 @@ This guide aims to help you [set up](#installation-and-setup), [use](#using-ship
 * [Configuring providers](#configuring-providers)
 * [Free samples](/examples/shipit.yml)
 
-**IV. INTERGRATING**
+**IV. INTEGRATING**
 
 * [Registering webhooks](#integrating-webhooks)
 
@@ -611,6 +611,8 @@ Your deploy scripts have access to the following environment variables:
 * `SHIPIT`: Set to `1` to allow your script to know it's executed by Shipit
 * `SHIPIT_LINK`: URL to the task output, useful to broadcast it in an IRC channel
 * `SHIPIT_USER`: Full name of the user that triggered the deploy/task
+* `GITHUB_REPO_NAME`: Name of the GitHub repository being used for the current deploy/task.
+* `GITHUB_REPO_OWNER`: The GitHub username of the repository owner for the current deploy/task.
 * `EMAIL`: Email of the user that triggered the deploy/task (if available)
 * `ENVIRONMENT`: The stack environment (e.g `production` / `staging`)
 * `BRANCH`: The stack branch (e.g `master`)
@@ -638,7 +640,7 @@ For Kubernetes, you have to provision Shipit environment with the following tool
 * `kubectl`
 * `kubernetes-deploy` [gem](https://github.com/Shopify/kubernetes-deploy)
 
-<h2 id="integrating">IV. INTERGRATING</h2>
+<h2 id="integrating">IV. INTEGRATING</h2>
 
 <h3 id="integrating-webhooks">Registering webhooks</h3>
 
