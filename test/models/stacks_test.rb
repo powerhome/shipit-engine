@@ -570,7 +570,6 @@ module Shipit
 
     test "#trigger_continuous_delivery bails out if no DeploySpec has been cached" do
       @stack = shipit_stacks(:check_deploy_spec)
-      shipit_tasks(:canaries_running).delete
       config = @stack.cached_deploy_spec.config
 
       assert_predicate @stack, :deployable?
