@@ -62,17 +62,6 @@ module Shipit
       }
     end
 
-    def env
-      {
-        'ENVIRONMENT' => environment,
-        'LAST_DEPLOYED_SHA' => last_deployed_commit.sha,
-        'GITHUB_REPO_OWNER' => repository.owner,
-        'GITHUB_REPO_NAME' => repository.name,
-        'DEPLOY_URL' => deploy_url,
-        'BRANCH' => branch,
-      }
-    end
-
     def repository
       super || build_repository
     end
@@ -179,19 +168,23 @@ module Shipit
       touch(:continuous_delivery_delayed_since) unless continuous_delivery_delayed?
     end
 
-    def trigger_continuous_delivery
-      commit = next_commit_to_deploy
-
+    def can_trigger_continuous_delivery?(commit)
       if !deployable? || deployed_too_recently? || commit.nil? || commit.deployed?
         continuous_delivery_resumed!
-        return
+        return false
       end
 
       if commit.deploy_failed? || (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
          commit.recently_pushed? || cached_deploy_spec.config.empty?
         continuous_delivery_delayed!
-        return
+        return false
       end
+    end
+
+    def trigger_continuous_delivery
+      commit = next_commit_to_deploy
+
+      return unless can_trigger_continuous_delivery?
 
       begin
         trigger_deploy(commit, Shipit.user, env: cached_deploy_spec.default_deploy_env)
