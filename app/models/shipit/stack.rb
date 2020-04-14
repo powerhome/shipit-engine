@@ -168,25 +168,25 @@ module Shipit
       touch(:continuous_delivery_delayed_since) unless continuous_delivery_delayed?
     end
 
-    def can_trigger_continuous_delivery?(commit)
-      if !deployable? || deployed_too_recently? || commit.nil? || commit.deployed?
-        continuous_delivery_resumed!
-        return false
-      end
+    def should_delay_continuous_delivery?(commit)
+      commit.deploy_failed? ||
+        (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
+        commit.recently_pushed? ||
+        cached_deploy_spec.config.empty?
+    end
 
-      if commit.deploy_failed? || (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
-         commit.recently_pushed? || cached_deploy_spec.config.empty?
-        continuous_delivery_delayed!
-        return false
-      end
-
-      true
+    def should_resume_continuous_delivery?(commit)
+      !deployable? ||
+        deployed_too_recently? ||
+        commit.nil? ||
+        commit.deployed?
     end
 
     def trigger_continuous_delivery
       commit = next_commit_to_deploy
 
-      return unless can_trigger_continuous_delivery?(commit)
+      return continuous_delivery_resumed! if should_resume_continuous_delivery?(commit)
+      return continuous_delivery_delayed! if should_delay_continuous_delivery?(commit)
 
       begin
         trigger_deploy(commit, Shipit.user, env: cached_deploy_spec.default_deploy_env)
