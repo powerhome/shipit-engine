@@ -43,6 +43,7 @@ module Shipit
     belongs_to :merge_requested_by, class_name: 'Shipit::User', optional: true
     has_one :merge_commit, class_name: 'Shipit::Commit'
     belongs_to :user, optional: true
+    has_many :assignees, class_name: :User, through: :pull_request_assignments, source: :user
 
     deferred_touch stack: :updated_at
 
