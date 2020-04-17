@@ -141,12 +141,14 @@ module Shipit
       pull_request
     end
 
-    def self.assign_to_stack!(stack, number)
+    def self.assign_to_stack!(stack, number, user)
       pull_request = PullRequest.find_or_create_by!(
         stack: stack,
         number: number,
         review_request: true,
-      )
+      ) do |pr|
+        pr.user = user
+      end
       pull_request.schedule_refresh!
       pull_request
     end

@@ -11,14 +11,14 @@ module Shipit
     test ".assign_to_stack! associates the pull request with a stack and schedules a pull request refresh" do
       pull_request = nil
       assert_enqueued_with(job: RefreshPullRequestJob) do
-        pull_request = PullRequest.assign_to_stack!(@stack, 100)
+        pull_request = PullRequest.assign_to_stack!(@stack, 100, @user)
       end
       assert_predicate pull_request, :persisted?
     end
 
     test ".assign_to_stack! is idempotent" do
       assert_difference -> { PullRequest.count }, +1 do
-        5.times { PullRequest.assign_to_stack!(@stack, 100) }
+        5.times { PullRequest.assign_to_stack!(@stack, 100, @user) }
       end
     end
 
