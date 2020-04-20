@@ -270,11 +270,7 @@ module Shipit
     end
 
     def find_and_assign_users(pr_assignees)
-      pr_assignees.map do |assignee|
-        assignee_user = User.find_by(login: assignee.login)
-        next unless assignee_user
-        assignee_user
-      end
+      pr_assignees.map { |assignee| User.find_by(login: assignee.login) }.compact
     end
 
     def merge_message
