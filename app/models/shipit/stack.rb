@@ -23,6 +23,9 @@ module Shipit
         )
       end
 
+      before_transition pending_provision: :provisioning do |stack, _|
+        stack.provisioner.up
+      end
       event :provision do
         transition pending_provision: :provisioning, if: -> (stack) { stack.auto_provisioned? }
       end
@@ -42,6 +45,9 @@ module Shipit
         )
       end
 
+      before_transition pending_deprovision: :deprovisioning do |stack, _|
+        stack.provisioner.down
+      end
       event :deprovision do
         transition pending_deprovision: :deprovisioning, if: -> (stack) { stack.auto_provisioned? }
       end
@@ -53,6 +59,14 @@ module Shipit
       event :fail_deprovisioning do
         transition deprovisioning: :deprovisioning_error, if: -> (stack) { stack.auto_provisioned? }
       end
+    end
+
+    def provisioner
+      provisioner_class.new(self)
+    end
+
+    def provisioner_class
+      ProvisioningHandler.for_stack(self)
     end
 
     module NoDeployedCommit
