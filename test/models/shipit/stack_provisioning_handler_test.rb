@@ -37,7 +37,7 @@ module Shipit
     test "handlers are called during provisioning" do
       stack = shipit_stacks(:shipit)
       stack.update(
-        provision_status: :pending_provision,
+        provision_status: :deprovisioned,
         auto_provisioned: true
       )
       mock_handler = mock("Mock Provisioning Handler")
@@ -52,7 +52,7 @@ module Shipit
     test "handlers are called during deprovisioning" do
       stack = shipit_stacks(:shipit)
       stack.update(
-        provision_status: :pending_deprovision,
+        provision_status: :provisioned,
         auto_provisioned: true
       )
       mock_handler = mock("Mock Provisioning Handler")
