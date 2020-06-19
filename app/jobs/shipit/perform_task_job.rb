@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class PerformTaskJob < BackgroundJob
     queue_as :deploys
@@ -15,6 +16,7 @@ module Shipit
     end
 
     def run
+      @task.ping
       @task.run!
       checkout_repository
       perform_task
@@ -56,20 +58,25 @@ module Shipit
     end
 
     def perform_task
-      capture_all! @commands.install_dependencies
-      capture_all! @commands.perform
+      capture_all!(@commands.install_dependencies)
+      capture_all!(@commands.perform)
     end
 
     def checkout_repository
       unless @commands.fetched?(@task.until_commit).tap(&:run).success?
+        # acquire_git_cache_lock can take upto 15 seconds
+        # to process. Try to make sure that the job isn't
+        # marked dead while we attempt to acquire the lock.
+        @task.ping
         @task.acquire_git_cache_lock do
+          @task.ping
           unless @commands.fetched?(@task.until_commit).tap(&:run).success?
-            capture! @commands.fetch
+            capture!(@commands.fetch)
           end
         end
       end
-      capture_all! @commands.clone
-      capture! @commands.checkout(@task.until_commit)
+      capture_all!(@commands.clone)
+      capture!(@commands.checkout(@task.until_commit))
     end
 
     def capture_all!(commands)

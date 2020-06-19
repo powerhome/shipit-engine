@@ -1,8 +1,12 @@
+# frozen_string_literal: true
 module Shipit
   class ChunkRollupJob < BackgroundJob
     include BackgroundJob::Unique
 
     queue_as :default
+
+    self.timeout = 60
+    self.lock_timeout = 30
 
     def perform(task)
       unless task.finished?

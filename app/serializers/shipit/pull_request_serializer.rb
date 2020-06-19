@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class PullRequestSerializer < ActiveModel::Serializer
     include GithubUrlHelper
@@ -5,6 +6,8 @@ module Shipit
 
     has_one :merge_requested_by
     has_one :head, serializer: ShortCommitSerializer
+    has_one :user
+    has_many :assignees, serializer: UserSerializer
 
     attributes :id, :number, :title, :github_id, :additions, :deletions, :state, :merge_status, :mergeable,
                :merge_requested_at, :rejection_reason, :html_url, :branch, :base_ref

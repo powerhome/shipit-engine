@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'test_helper'
 require 'securerandom'
 
@@ -70,11 +71,11 @@ module Shipit
 
       last_commit = shipit_commits(:third)
       deploy = @stack.trigger_deploy(last_commit, AnonymousUser.new)
-      assert_includes FakeReceiver.hooks, [
+      assert_includes(FakeReceiver.hooks, [
         :deploy,
         @stack,
-        {deploy: deploy, status: "pending", stack: @stack},
-      ]
+        { deploy: deploy, status: "pending", stack: @stack },
+      ])
     ensure
       Shipit.internal_hook_receivers = original_receivers
     end
@@ -260,6 +261,23 @@ module Shipit
       Stack.run_deploy_in_foreground(stack: stack.to_param, revision: commit.sha)
     end
 
+    test ".review_request is nil by default" do
+      assert_nil @stack.review_request
+    end
+
+    test ".review_request returns nil when all pull requests are merge requests" do
+      @stack = shipit_stacks(:shipit)
+
+      assert_nil @stack.review_request
+    end
+
+    test ".review_request returns latest non merge request" do
+      @stack = shipit_stacks(:shipit)
+      @pull_request = PullRequest.create!(stack: @stack, number: "1", review_request: true)
+
+      assert @stack.review_request, @pull_request
+    end
+
     test "#active_task? is memoized" do
       assert_queries(1) do
         10.times { @stack.active_task? }
@@ -306,7 +324,7 @@ module Shipit
     end
 
     test "#monitoring returns deploy_spec's content" do
-      assert_equal [{'image' => 'https://example.com/monitor.png', 'width' => 200, 'height' => 300}], @stack.monitoring
+      assert_equal [{ 'image' => 'https://example.com/monitor.png', 'width' => 200, 'height' => 300 }], @stack.monitoring
     end
 
     test "#destroy deletes the related commits" do
@@ -338,7 +356,7 @@ module Shipit
         time = Time.current
         @stack.update(lock_reason: "Just for fun", lock_author: shipit_users(:walrus))
         travel 1.day
-        expect_hook(:lock, @stack, locked: false, lock_details: {from: time, until: Time.current}, stack: @stack) do
+        expect_hook(:lock, @stack, locked: false, lock_details: { from: time, until: Time.current }, stack: @stack) do
           @stack.update(lock_reason: nil)
         end
       end
@@ -389,7 +407,7 @@ module Shipit
 
     test "updating the stack emit a hook" do
       expect_hook(:stack, @stack, action: :updated, stack: @stack) do
-        @stack.update(repo_name: 'foo')
+        @stack.update(environment: 'foo')
       end
     end
 
@@ -483,7 +501,9 @@ module Shipit
 
       assert_no_enqueued_jobs do
         assert_no_difference -> { Deploy.count } do
-          @stack.trigger_continuous_delivery
+          value = @stack.trigger_continuous_delivery
+
+          assert_nil value
         end
       end
     end
@@ -551,6 +571,21 @@ module Shipit
       end
     end
 
+    test "#trigger_continuous_delivery bails out if no DeploySpec has been cached" do
+      @stack = shipit_stacks(:check_deploy_spec)
+      deploy_spec = @stack.cached_deploy_spec
+
+      assert_predicate @stack, :deployable?
+      refute_predicate @stack, :deployed_too_recently?
+      assert(deploy_spec.blank?, "DeploySpec blank? returned false")
+
+      assert_no_enqueued_jobs(only: Shipit::PerformTaskJob) do
+        assert_no_difference -> { Deploy.count } do
+          @stack.trigger_continuous_delivery
+        end
+      end
+    end
+
     test "#trigger_continuous_delivery enqueues deployment ref update job" do
       @stack = shipit_stacks(:shipit_canaries)
       shipit_tasks(:canaries_running).delete
@@ -598,7 +633,7 @@ module Shipit
       @stack.tasks.delete_all
 
       deploy = @stack.trigger_continuous_delivery
-      assert_equal({'SAFETY_DISABLED' => '0'}, deploy.env)
+      assert_equal({ 'SAFETY_DISABLED' => '0' }, deploy.env)
     end
 
     test "#continuous_delivery_delayed! bumps updated_at" do
@@ -664,13 +699,34 @@ module Shipit
       assert_equal user, @stack.lock_author
     end
 
-    test "#unlock deletes reason and user" do
+    test "#lock can set a reason code" do
+      reason = "Here comes the walrus"
       user = shipit_users(:walrus)
-      @stack.lock("Here comes the walrus", user)
+      code = "STUFF"
+      @stack.lock(reason, user, code: code)
+      assert @stack.locked?
+      assert_equal code, @stack.lock_reason_code
+      assert_equal [@stack], Shipit::Stack.locked_because(code).all
+    end
+
+    test "#unlock deletes reason, user & reason code" do
+      user = shipit_users(:walrus)
+      @stack.lock("Here comes the walrus", user, code: "STUFF")
       @stack.unlock
       refute @stack.locked?
       assert_nil @stack.lock_reason
+      assert_nil @stack.lock_reason_code
       assert_not_equal user, @stack.lock_author
+    end
+
+    test "stacks can be marked auto-provisioned" do
+      @stack.update!(auto_provisioned: true)
+      assert @stack.auto_provisioned?
+    end
+
+    test "auto-provisioned stacks can be listed" do
+      @stack.update!(auto_provisioned: true)
+      assert_equal [@stack], Shipit::Stack.auto_provisioned
     end
 
     test "stack contains valid deploy_url" do
@@ -863,6 +919,41 @@ module Shipit
       end
     end
 
+    test "#links performs template substitutions" do
+      @stack.repo_name = "expected-repository-name"
+      @stack.environment = "expected-environment"
+      @stack.cached_deploy_spec = create_deploy_spec(
+        "links" => {
+          "logs" => "http://logs.$GITHUB_REPO_NAME.$ENVIRONMENT.domain.com",
+          "monitoring" => "https://graphs.$GITHUB_REPO_NAME.$ENVIRONMENT.domain.com",
+        },
+      )
+
+      assert_equal(
+        {
+          "logs" => "http://logs.expected-repository-name.expected-environment.domain.com",
+          "monitoring" => "https://graphs.expected-repository-name.expected-environment.domain.com",
+        },
+        @stack.links,
+      )
+    end
+
+    test "#env includes the stack's environment" do
+      expected_environment = {
+        'ENVIRONMENT' => @stack.environment,
+        'LAST_DEPLOYED_SHA' => @stack.last_deployed_commit.sha,
+        'GITHUB_REPO_OWNER' => @stack.repository.owner,
+        'GITHUB_REPO_NAME' => @stack.repository.name,
+        'DEPLOY_URL' => @stack.deploy_url,
+        'BRANCH' => @stack.branch,
+      }
+
+      assert_equal(
+        @stack.env,
+        expected_environment,
+      )
+    end
+
     private
 
     def generate_revert_commit(stack:, reverted_commit:, author: reverted_commit.author)
@@ -874,6 +965,10 @@ module Shipit
         authored_at: Time.zone.now,
         committed_at: Time.zone.now,
       )
+    end
+
+    def create_deploy_spec(spec)
+      Shipit::DeploySpec.new(spec.stringify_keys)
     end
   end
 end

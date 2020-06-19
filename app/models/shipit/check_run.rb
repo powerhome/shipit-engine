@@ -1,6 +1,7 @@
+# frozen_string_literal: true
 module Shipit
   class CheckRun < ApplicationRecord
-    CONCLUSIONS = %w(success failure neutral cancelled timed_out action_required).freeze
+    CONCLUSIONS = %w(success failure neutral cancelled timed_out action_required stale).freeze
     include DeferredTouch
     include Status::Common
 
@@ -9,7 +10,7 @@ module Shipit
 
     deferred_touch commit: :updated_at
 
-    validates :conclusion, inclusion: {in: CONCLUSIONS, allow_nil: true}
+    validates :conclusion, inclusion: { in: CONCLUSIONS, allow_nil: true }
 
     after_create :enable_ci_on_stack
 
@@ -45,7 +46,7 @@ module Shipit
         'pending'
       when 'success', 'neutral'
         'success'
-      when 'failure', 'cancelled'
+      when 'failure', 'cancelled', 'stale'
         'failure'
       when 'timed_out'
         'error'

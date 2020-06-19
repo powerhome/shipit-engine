@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   module GithubUrlHelper
     private
@@ -48,6 +49,14 @@ module Shipit
         pull_request_or_commit.number
       end
       github_repo_url(stack.repo_owner, stack.repo_name, 'pull', number)
+    end
+
+    def stack_github_url(stack)
+      if stack.review_request
+        github_pull_request_url(stack.review_request)
+      else
+        github_repo_url(stack.repo_owner, stack.repo_name)
+      end
     end
 
     def link_to_github_deploy(deploy)

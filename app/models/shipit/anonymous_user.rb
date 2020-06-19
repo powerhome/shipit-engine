@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class AnonymousUser
     def present?
@@ -34,6 +35,10 @@ module Shipit
       Shipit.authentication_disabled?
     end
 
+    def repositories_contributed_to
+      []
+    end
+
     def stacks_contributed_to
       []
     end
@@ -53,6 +58,10 @@ module Shipit
 
     def github_api
       Shipit.github.api
+    end
+
+    def serializer_class
+      AnonymousUserSerializer
     end
   end
 end

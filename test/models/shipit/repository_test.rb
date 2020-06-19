@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'test_helper'
 
 module Shipit
@@ -60,6 +61,10 @@ module Shipit
 
     test "git_url" do
       assert_equal "https://github.com/#{@repository.owner}/#{@repository.name}.git", @repository.git_url
+    end
+
+    test "provision_pr_stacks defaults to false" do
+      assert_equal false, Repository.new.provision_pr_stacks
     end
 
     test "from_github_repo_name" do

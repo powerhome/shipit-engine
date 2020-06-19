@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 namespace :cron do
   desc "Updates deployed revisions"
   task minutely: :environment do
@@ -5,6 +6,7 @@ namespace :cron do
     Shipit::Stack.schedule_continuous_delivery
     Shipit::GithubStatus.refresh_status
     Shipit::PullRequest.schedule_merges
+    Shipit::ReapDeadTasksJob.perform_later
   end
 
   task hourly: %i(rollup refresh_users)

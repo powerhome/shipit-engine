@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class CommandLineUser
     def present?
@@ -32,6 +33,10 @@ module Shipit
 
     def authorized?
       Shipit.authentication_disabled?
+    end
+
+    def repositories_contributed_to
+      []
     end
 
     def stacks_contributed_to

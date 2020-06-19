@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'test_helper'
 
 module Shipit
@@ -6,6 +7,20 @@ module Shipit
       @stack = shipit_stacks(:shipit)
       @pr = shipit_pull_requests(:shipit_pending)
       @user = shipit_users(:walrus)
+    end
+
+    test ".assign_to_stack! associates the pull request with a stack and schedules a pull request refresh" do
+      pull_request = nil
+      assert_enqueued_with(job: RefreshPullRequestJob) do
+        pull_request = PullRequest.assign_to_stack!(@stack, 100)
+      end
+      assert_predicate pull_request, :persisted?
+    end
+
+    test ".assign_to_stack! is idempotent" do
+      assert_difference -> { PullRequest.count }, +1 do
+        5.times { PullRequest.assign_to_stack!(@stack, 100) }
+      end
     end
 
     test ".request_merge! creates a record and schedule a refresh" do
@@ -66,6 +81,7 @@ module Shipit
 
     test "refresh! pulls state from GitHub" do
       pull_request = shipit_pull_requests(:shipit_fetching)
+      user = shipit_users(:bob)
 
       head_sha = '64b3833d39def7ec65b57b42f496eb27ab4980b6'
       base_sha = 'ba7ab50e02286f7d6c60c1ef75258133dd9ea763'
@@ -87,6 +103,18 @@ module Shipit
             ref:  'default-branch',
             sha: base_sha,
           ),
+          user: stub(
+            id: 1234,
+            login: 'bob',
+            site_admin: false,
+          ),
+          assignees: [
+            stub(
+              id: 1234,
+              login: 'bob',
+              site_admin: false,
+            ),
+          ],
         ),
       )
 
@@ -129,6 +157,8 @@ module Shipit
       assert_predicate pull_request, :mergeable?
       assert_predicate pull_request, :pending?
       assert_equal 'super-branch', pull_request.branch
+      assert_equal user, pull_request.user
+      assert_equal [user], pull_request.assignees
 
       assert_not_nil pull_request.head
       assert_predicate pull_request.head, :detached?
@@ -237,6 +267,16 @@ module Shipit
       assert_json 'pull_request.number', @pr.number, document: params[:payload]
     end
 
+    test "changes to pull request emit hooks" do
+      job = assert_enqueued_with(job: EmitEventJob) do
+        @pr.update!(title: "Brand new title")
+      end
+      params = job.arguments.first
+      assert_equal 'pull_request', params[:event]
+      assert_json 'action', 'updated', document: params[:payload]
+      assert_json 'pull_request.title', 'Brand new title', document: params[:payload]
+    end
+
     test "#merge! doesnt delete the branch if there are open PRs against it" do
       Shipit.github.api.expects(:merge_pull_request).once.returns(true)
       Shipit.github.api.expects(:pull_requests).once.with(@stack.github_repo_name, base: @pr.branch).returns([1])
@@ -271,7 +311,7 @@ module Shipit
           behind_by: 10,
         ),
       )
-      spec = {'merge' => {'max_divergence' => {'commits' => 1}}}
+      spec = { 'merge' => { 'max_divergence' => { 'commits' => 1 } } }
       @pr.stack.cached_deploy_spec = DeploySpec.new(spec)
       assert_predicate @pr, :stale?
     end
@@ -279,14 +319,14 @@ module Shipit
     test "#stale? returns true when the branch falls behind the maximum age" do
       @pr.base_commit = shipit_commits(:second)
       @pr.head.committed_at = 2.hours.ago
-      spec = {'merge' => {'max_divergence' => {'age' => '1h'}}}
+      spec = { 'merge' => { 'max_divergence' => { 'age' => '1h' } } }
       @pr.stack.cached_deploy_spec = DeploySpec.new(spec)
       assert_predicate @pr, :stale?
     end
 
     test "#stale? is false when base_commit information is missing" do
       @pr.base_commit = nil
-      spec = {'merge' => {'max_divergence' => {'age' => '1h', 'commits' => 10}}}
+      spec = { 'merge' => { 'max_divergence' => { 'age' => '1h', 'commits' => 10 } } }
       @pr.stack.cached_deploy_spec = DeploySpec.new(spec)
       refute_predicate @pr, :stale?
     end

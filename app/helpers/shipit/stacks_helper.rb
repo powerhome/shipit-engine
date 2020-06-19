@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   module StacksHelper
     def redeploy_button(deployed_commit)
@@ -89,6 +90,10 @@ module Shipit
 
     def positive_negative_class(value)
       value.to_f >= 0 ? 'positive' : 'negative'
+    end
+
+    def contributor_class(stacks_contributed_to, stack_id)
+      stacks_contributed_to.include?(stack_id) ? "contributor" : "not-matching"
     end
   end
 end

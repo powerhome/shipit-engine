@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class EnvironmentVariables
     NotPermitted = Class.new(StandardError)
@@ -14,6 +15,15 @@ module Shipit
       sanitize_env_vars(variable_definitions)
     end
 
+    def interpolate(argument)
+      return argument unless @env
+
+      argument.gsub(/(\$\w+)/) do |variable|
+        variable.sub!('$', '')
+        Shellwords.escape(@env.fetch(variable) { ENV[variable] })
+      end
+    end
+
     private
 
     def initialize(env)
@@ -26,7 +36,7 @@ module Shipit
       allowed, disallowed = @env.partition { |k, _| allowed_variables.include?(k) }.map(&:to_h)
 
       error_message = "Variables #{disallowed.keys.to_sentence} have not been whitelisted"
-      raise NotPermitted.new(error_message) unless disallowed.empty?
+      raise NotPermitted, error_message unless disallowed.empty?
 
       allowed
     end

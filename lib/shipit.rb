@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'active_support/all'
 require 'active_model_serializers'
 require 'state_machines-activerecord'
@@ -48,6 +49,7 @@ require 'shipit/rollback_commands'
 require 'shipit/environment_variables'
 require 'shipit/stat'
 require 'shipit/github_http_cache_middleware'
+require 'shipit/same_site_cookie_middleware'
 require 'shipit/cast_value'
 require 'shipit/line_buffer'
 
@@ -66,6 +68,10 @@ module Shipit
 
   def authentication_disabled?
     ENV['SHIPIT_DISABLE_AUTH'].present?
+  end
+
+  def enable_samesite_middleware?
+    ENV['SHIPIT_ENABLE_SAMESITE_NONE'].present?
   end
 
   def app_name
@@ -147,7 +153,7 @@ module Shipit
   end
 
   def env
-    {'SHIPIT' => '1'}.merge(secrets.env || {})
+    { 'SHIPIT' => '1' }.merge(secrets.env || {})
   end
 
   def shell_paths
@@ -159,7 +165,7 @@ module Shipit
       if revision_file.exist?
         revision_file.read
       else
-        `git rev-parse HEAD`
+        %x(git rev-parse HEAD)
       end.strip
     end
   end

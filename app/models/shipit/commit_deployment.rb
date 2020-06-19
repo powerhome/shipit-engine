@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Shipit
   class CommitDeployment < ActiveRecord::Base
     belongs_to :task
@@ -56,7 +57,7 @@ module Shipit
             from_sha: task.since_commit.sha,
             to_sha: task.until_commit.sha,
           },
-        },
+        }.to_json,
       )
     end
   end

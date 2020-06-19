@@ -1,10 +1,11 @@
+# frozen_string_literal: true
 module Shipit
   class DeployStats
     delegate :empty?, to: :@deploys
 
     def initialize(deploys)
       @deploys = deploys
-      @durations = @deploys.map { |d| d.duration.value }.compact
+      @durations = @deploys.map { |d| d.duration&.value }.compact
     end
 
     def count

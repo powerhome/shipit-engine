@@ -1,5 +1,7 @@
+# frozen_string_literal: true
 Shipit::Engine.routes.draw do
   stack_id_format = %r{[^/]+/[^/]+/[^/]+}
+  repository_id_format = %r{[^/]+/[^/]+}
   sha_format = /[\da-f]{6,40}/
   root to: 'stacks#index'
 
@@ -48,7 +50,15 @@ Shipit::Engine.routes.draw do
 
   # Humans
   resources :api_clients
-  resources :stacks, only: %i(new create index)
+
+  resources :repositories, only: %i(new index create)
+  scope '/repositories/*id', id: repository_id_format, as: :repository do
+    get '/' => 'repositories#show'
+    patch '/' => 'repositories#update'
+    delete '/' => 'repositories#destroy'
+    get :settings, controller: :repositories
+    get 'stacks/new' => 'repositories#new_stack'
+  end
 
   scope '/github/auth/github', as: :github_authentication, controller: :github_authentication do
     get '/', action: :request
@@ -57,6 +67,7 @@ Shipit::Engine.routes.draw do
     get :logout
   end
 
+  resources :stacks, only: %i(new create index)
   scope '/*id', id: stack_id_format, as: :stack do
     get '/' => 'stacks#show'
     patch '/' => 'stacks#update'
@@ -74,7 +85,7 @@ Shipit::Engine.routes.draw do
 
   scope '/*stack_id', stack_id: stack_id_format, as: :stack do
     get '/commit/:sha/checks' => 'commit_checks#show', as: :commit_checks
-    get '/commit/:sha/checks/tail' => 'commit_checks#tail', as: :tail_commit_checks, defaults: {format: :json}
+    get '/commit/:sha/checks/tail' => 'commit_checks#tail', as: :tail_commit_checks, defaults: { format: :json }
 
     get '/stats' => 'stats#show', as: :stats
 
@@ -89,7 +100,7 @@ Shipit::Engine.routes.draw do
 
       member do
         post :abort
-        get :tail, defaults: {format: :json}
+        get :tail, defaults: { format: :json }
       end
     end
 

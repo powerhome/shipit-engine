@@ -1,7 +1,60 @@
+# frozen_string_literal: true
 require 'fileutils'
 
 module Shipit
   class Stack < ActiveRecord::Base
+    NotYetSynced = Class.new(StandardError)
+
+    state_machine :provision_status, initial: :not_provisioned do
+      state :not_provisioned
+      state :pending_provision
+      state :provisioning
+      state :provisioning_error
+      state :provisioned
+      state :pending_deprovision
+      state :deprovisioning
+      state :deprovisioning_error
+      state :deprovisioned
+
+      event :schedule_provision do
+        transition(
+          %i(not_provisioned deprovisioned provisioning_error) => :pending_provision,
+          if: -> (stack) { stack.auto_provisioned? }
+        )
+      end
+
+      event :provision do
+        transition pending_provision: :provisioning, if: -> (stack) { stack.auto_provisioned? }
+      end
+
+      event :provisioned do
+        transition provisioning: :provisioned, if: -> (stack) { stack.auto_provisioned? }
+      end
+
+      event :fail_provisioning do
+        transition provisioning: :provisioning_error, if: -> (stack) { stack.auto_provisioned? }
+      end
+
+      event :schedule_deprovision do
+        transition(
+          %i(provisioned deprovisioning_error) => :pending_deprovision,
+          if: -> (stack) { stack.auto_provisioned? }
+        )
+      end
+
+      event :deprovision do
+        transition pending_deprovision: :deprovisioning, if: -> (stack) { stack.auto_provisioned? }
+      end
+
+      event :deprovisioned do
+        transition deprovisioning: :deprovisioned, if: -> (stack) { stack.auto_provisioned? }
+      end
+
+      event :fail_deprovisioning do
+        transition deprovisioning: :deprovisioning_error, if: -> (stack) { stack.auto_provisioned? }
+      end
+    end
+
     module NoDeployedCommit
       extend self
 
@@ -39,9 +92,26 @@ module Shipit
     has_many :api_clients, dependent: :destroy
     belongs_to :lock_author, class_name: :User, optional: true
     belongs_to :repository
+    has_one :review_request, -> { where(review_request: true) }, class_name: "PullRequest"
     validates_associated :repository
 
     scope :not_archived, -> { where(archived_since: nil) }
+    scope :locked_because, ->(reason_code) { where(lock_reason_code: reason_code) }
+    scope :auto_provisioned, -> { where(auto_provisioned: true) }
+
+    include DeferredTouch
+    deferred_touch repository: :updated_at
+
+    def env
+      {
+        'ENVIRONMENT' => environment,
+        'LAST_DEPLOYED_SHA' => last_deployed_commit.sha,
+        'GITHUB_REPO_OWNER' => repository.owner,
+        'GITHUB_REPO_NAME' => repository.name,
+        'DEPLOY_URL' => deploy_url,
+        'BRANCH' => branch,
+      }
+    end
 
     def repository
       super || build_repository
@@ -71,13 +141,13 @@ module Shipit
       scope: %i(environment), case_sensitive: false,
       message: 'cannot be used more than once with this environment. Check archived stacks.'
     }
-    validates :environment, format: {with: /\A[a-z0-9\-_\:]+\z/}, length: {maximum: ENVIRONMENT_MAX_SIZE}
-    validates :deploy_url, format: {with: URI.regexp(%w(http https ssh))}, allow_blank: true
+    validates :environment, format: { with: /\A[a-z0-9\-_\:]+\z/ }, length: { maximum: ENVIRONMENT_MAX_SIZE }
+    validates :deploy_url, format: { with: URI.regexp(%w(http https ssh)) }, allow_blank: true
 
-    validates :lock_reason, length: {maximum: 4096}
+    validates :lock_reason, length: { maximum: 4096 }
 
     serialize :cached_deploy_spec, DeploySpec
-    delegate :find_task_definition, :supports_rollback?, :links, :release_status?, :release_status_delay,
+    delegate :find_task_definition, :supports_rollback?, :release_status?, :release_status_delay,
              :release_status_context, :supports_fetch_deployed_revision?, to: :cached_deploy_spec, allow_nil: true
 
     def self.refresh_deployed_revisions
@@ -130,8 +200,11 @@ module Shipit
 
     def trigger_deploy(*args, **kwargs)
       run_now = kwargs.delete(:run_now)
-      deploy = build_deploy(*args, **kwargs)
-      deploy.save!
+      deploy = with_lock do
+        deploy = build_deploy(*args, **kwargs)
+        deploy.save!
+        deploy
+      end
       run_now ? deploy.run_now! : deploy.enqueue
       continuous_delivery_resumed!
       deploy
@@ -150,15 +223,16 @@ module Shipit
     end
 
     def trigger_continuous_delivery
+      return if cached_deploy_spec.blank?
+
       commit = next_commit_to_deploy
 
-      if !deployable? || deployed_too_recently? || commit.nil? || commit.deployed?
+      if should_resume_continuous_delivery?(commit)
         continuous_delivery_resumed!
         return
       end
 
-      if commit.deploy_failed? || (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
-         commit.recently_pushed?
+      if should_delay_continuous_delivery?(commit)
         continuous_delivery_delayed!
         return
       end
@@ -190,7 +264,7 @@ module Shipit
     def async_refresh_deployed_revision
       async_refresh_deployed_revision!
     rescue => error
-      logger.warn "Failed to dispatch FetchDeployedRevisionJob: [#{error.class.name}] #{error.message}"
+      logger.warn("Failed to dispatch FetchDeployedRevisionJob: [#{error.class.name}] #{error.message}")
     end
 
     def async_refresh_deployed_revision!
@@ -258,8 +332,8 @@ module Shipit
         next if commits_to_lock.empty?
 
         affected_rows += commits
-                         .where(id: commits_to_lock.map(&:id).uniq)
-                         .lock_all(revert.author)
+          .where(id: commits_to_lock.map(&:id).uniq)
+          .lock_all(revert.author)
       end
 
       touch if affected_rows > 1
@@ -354,7 +428,7 @@ module Shipit
     end
 
     def github_repo_name
-      [repo_owner, repo_name].join('/')
+      repository.github_repo_name
     end
 
     def github_commits
@@ -397,13 +471,13 @@ module Shipit
       lock_reason.present?
     end
 
-    def lock(reason, user)
-      params = {lock_reason: reason, lock_author: user}
+    def lock(reason, user, code: nil)
+      params = { lock_reason: reason, lock_reason_code: code, lock_author: user }
       update!(params)
     end
 
     def unlock
-      update!(lock_reason: nil, lock_author: nil, locked_since: nil)
+      update!(lock_reason: nil, lock_reason_code: nil, lock_author: nil, locked_since: nil)
     end
 
     def archived?
@@ -411,11 +485,11 @@ module Shipit
     end
 
     def archive!(user)
-      update!(archived_since: Time.now, lock_reason: "Archived", lock_author: user)
+      update!(archived_since: Time.now, lock_reason: "Archived", lock_reason_code: "ARCHIVED", lock_author: user)
     end
 
     def unarchive!
-      update!(archived_since: nil, lock_reason: nil, lock_author: nil, locked_since: nil)
+      update!(archived_since: nil, lock_reason: nil, lock_reason_code: nil, lock_author: nil, locked_since: nil)
     end
 
     def to_param
@@ -476,7 +550,7 @@ module Shipit
     def broadcast_update
       Pubsubstub.publish(
         "stack.#{id}",
-        {id: id, updated_at: updated_at}.to_json,
+        { id: id, updated_at: updated_at }.to_json,
         name: 'update',
       )
     end
@@ -528,6 +602,13 @@ module Shipit
       GithubSyncJob.perform_later(stack_id: id)
     end
 
+    def links
+      links_spec = cached_deploy_spec&.links || {}
+      context = EnvironmentVariables.with(env)
+
+      links_spec.transform_values { |url| context.interpolate(url) }
+    end
+
     private
 
     def clear_cache
@@ -563,7 +644,7 @@ module Shipit
       return unless previous_changes.include?('lock_reason')
 
       lock_details = if previous_changes['lock_reason'].last.blank?
-        {from: previous_changes['locked_since'].first, until: Time.zone.now}
+        { from: previous_changes['locked_since'].first, until: Time.zone.now }
       end
 
       Hook.emit(:lock, self, locked: locked?, lock_details: lock_details, stack: self)
@@ -588,6 +669,19 @@ module Shipit
 
     def ci_enabled_cache_key
       "stacks:#{id}:ci_enabled"
+    end
+
+    def should_resume_continuous_delivery?(commit)
+      !deployable? ||
+        deployed_too_recently? ||
+        commit.nil? ||
+        commit.deployed?
+    end
+
+    def should_delay_continuous_delivery?(commit)
+      commit.deploy_failed? ||
+        (checks? && !EphemeralCommitChecks.new(commit).run.success?) ||
+        commit.recently_pushed?
     end
   end
 end
