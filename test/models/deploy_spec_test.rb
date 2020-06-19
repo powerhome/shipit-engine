@@ -362,7 +362,7 @@ module Shipit
           'context' => nil,
           'delay' => 0,
         },
-        'dependencies' => {'override' => []},
+        'dependencies' => { 'override' => [] },
         'plugins' => ["failure-reasons"],
         'deploy' => {
           'override' => nil,
