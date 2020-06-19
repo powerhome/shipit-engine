@@ -1,0 +1,30 @@
+.failure-banner-section {
+    margin: 0.5em 0;
+    width: 100%;
+    text-align: center;
+}
+
+.failure-actions {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+.failure-banner {
+    background-color: #F73B3B;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.failure-input {
+    width: 18em !important;
+    margin: 0.5em 0.5em 1em;
+    padding: 0.5em !important;
+    margin-bottom: 1em;
+}
+
+.failure-reason {
+    width: auto;
+    padding: 0.5em;
+}

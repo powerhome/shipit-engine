@@ -362,7 +362,7 @@ module Shipit
           'delay' => 0,
         },
         'dependencies' => {'override' => []},
-        'plugins' => {},
+        'plugins' => ["failure-reasons"],
         'deploy' => {
           'override' => nil,
           'variables' => [],
