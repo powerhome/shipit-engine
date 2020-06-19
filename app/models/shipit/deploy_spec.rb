@@ -208,7 +208,7 @@ module Shipit
     end
 
     def plugins
-      config('plugins') || {}
+      config('plugins') || ["failure-reasons"]
     end
 
     def clear_working_directory?
