@@ -16,7 +16,11 @@ module Shipit
       end
 
       def for_stack(stack)
-        handlers[stack.github_repo_name] || handlers[:default] || ProvisioningHandler::Base
+        handlers[stack.github_repo_name] || default
+      end
+
+      def default
+        handlers[:default] || ProvisioningHandler::Base
       end
     end
   end
