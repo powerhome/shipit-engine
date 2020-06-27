@@ -64,9 +64,9 @@ deploy:
 
 A default, no-op provisioning handler is provided when neither a repository level, nor host-application-default provisioning handler is provided.
 
-The Provisioner for a give stack is discovered at runtime using the following order of precedence:
+The Provisioner for a given stack is discovered at runtime using the following order of precedence:
 
-1. shipit.yml - `hanler_name:` value
+1. shipit.yml - `handler_name:` value
 1. repository name - `Shipit::ProvisioningHandler.register(<stack's github_repo_name>, ...)`
 1. default override - `Shipit::ProvisioningHandler.register(:default, ...)`
 1. no-op default - `ProvisioningHandler::Base`
