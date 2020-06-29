@@ -49,8 +49,7 @@ module Shipit
     end
 
     def provisioner_class
-      provisioning_handler_name.presence&.constantize ||
-        ProvisioningHandler.for_stack(self)
+      ProvisioningHandler.fetch(provisioning_handler_name)
     end
 
     module NoDeployedCommit

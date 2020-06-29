@@ -20,15 +20,16 @@ shipit-engine support three distinct behaviors for determining which Pull Reques
 1. "Allow With Label" - when creating or updating a Pull Request, the user must add a label matching the `Shipit::Repository`'s "provisioning_label" attribute in order for shipit-engine to dynamically create/manage a Review Stack - an opt-in strategy.
 1. "Prevent With Label" - when creating or updating a Pull Request, the user must add a label matching the `Shipit::Repository`'s "provisoining_label" attribute in order to **prevent** shipit-engine from dynamically creating/managing a Review Stack - an opt-out strategy.
 
-# Provisioning and deprovisioning Review Stack environments
+# Provisioning and deprovisioning Review Stack instances
 
-Review Stacks will need an environment into which they are deployed. For some this might be a Heroku instance, for others it might be a Kubernetes namespace, etc. shipit-engine allows the host application to define `ProvisioningHandler`s to define how Review Stacks should provisoin/deprovision their environments.
+Review Stacks will need an instance into which they are deployed. For some this might be a Heroku instance, for others it might be a Kubernetes namespace, etc. shipit-engine allows the host application to define `ProvisioningHandler`s to define how Review Stacks should provisoing/deprovision their instances.
 
-For example, imagine a repository which deploys to a Kubernetes cluster. The host application could register a Kubernetes provisioning handler to take care of creating / destroying kubernetes resources for a stack:
+For example, imagine a repository which deploys to a Kubernetes cluster. The host application could register a Kubernetes provisioning handler to take care of setting-up and tearing-down Kubernetes resources for a stack:
 
-Define a provisioning Handler
+Define a provisioning Handler:
 
 ```ruby
+# <path-to-host-application>/app/provisioning_handlers/kubernetes_provisioning_handler.rb
 class KubernetesProvisioningHandler < Shipit::ProvisioningHandler::Base
   def up
     # allocate a namespace, copy resources, etc
@@ -40,21 +41,19 @@ class KubernetesProvisioningHandler < Shipit::ProvisioningHandler::Base
 end
 ```
 
-Register a default provisioning handler - IE how repositories which don't explicitly define a provisoining handler will be provisioned:
+The host application **MUST** `#register` - whitelist - the custom ProvisioningHandler in the `Shipit::ProvisioningHandler` registry. This will  most likely happen as part of a shipit-engine initialization routine in the host application. For example:
 
 ```ruby
-Shipit::ProvisioningHandler.register(:default, KubernetesProvisioningHandler)
+# <path-to-host-application>/config/initializers/shipit.rb
+ActiveSupport::Reloader.to_prepare do
+  ...
+  Shipit::ProvisioningHandler.register(KubernetesProvisioningHandler)
+end
 ```
-
-Or, define a provisionng handler for a specific repository:
-
-```ruby
-Shipit::ProvisioningHandler.register('powerhome/nitro-web', KubernetesProvisioningHandler)
-```
-
-Repository specific `ProvisioningHandler`s can also be configured in the project's `shipit.yml` by supplying the name of the provisioning handler supplied by the host application. For example:
+The custom `KubernetesProvisioningHandler` can the  be used in a project's `shipit.yml`:
 
 ```yaml
+# <path-to-managed-appliction>/shipit.yml
 provision:
   handler_name: KubernetesProvisioningHandler
 
@@ -62,11 +61,24 @@ deploy:
   override: <deployment-script>
 ```
 
-A default, no-op provisioning handler is provided when neither a repository level, nor host-application-default provisioning handler is provided.
+Now all Review Stacks for this repository will use the `KubernetesProvisioningHandler` to (de)provision their instances.
 
-The Provisioner for a given stack is discovered at runtime using the following order of precedence:
+## Default `ProvisioningHandler`s
+
+Register a host-application-wide default provisioning handler - IE how repositories which don't explicitly define a provisoining handler will be provisioned:
+
+```ruby
+# <path-to-host-application>/config/initializers/shipit.rb
+ActiveSupport::Reloader.to_prepare do
+  ...
+  Shipit::ProvisioningHandler.register(KubernetesProvisioningHandler)
+end
+```
+
+A default, no-op provisioning handler - `Shipit::ProvisioningHandler::Base` - is provided. When the name of an unregistered handler is requested from the `Shipit::ProvisioningHandler` a `DEBUG` level message is logged indicating that an unregistered handler was requested and returns the `Shipit::ProvisioningHandler.defailt` handler.
+
+The ProvisioningHandler for a give stack is discovered at runtime using the following order of precedence:
 
 1. shipit.yml - `handler_name:` value
-1. repository name - `Shipit::ProvisioningHandler.register(<stack's github_repo_name>, ...)`
-1. default override - `Shipit::ProvisioningHandler.register(:default, ...)`
+1. Host-application-specific default override - `Shipit::ProvisioningHandler.default = ...`
 1. no-op default - `ProvisioningHandler::Base`

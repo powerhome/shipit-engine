@@ -3,24 +3,38 @@
 module Shipit
   module ProvisioningHandler
     class << self
-      def handlers
-        @handlers ||= reset!
+      def registry
+        @registry ||= reset_registry!
       end
 
-      def reset!
-        @handlers = {}
+      def reset_registry!
+        @registry = {}
       end
 
-      def register(github_repo_name, callable)
-        handlers[github_repo_name] = callable if callable.present?
+      def register(handler_class)
+        registry[handler_class.to_s] = handler_class if handler_class.present?
       end
 
-      def for_stack(stack)
-        handlers[stack.github_repo_name] || default
+      def fetch(name)
+        registry.fetch(name) do
+          if name.present?
+            Rails.logger.debug(
+              "Failed to find a provisining handler named '#{name}' in the ProvisioningHandler registry." \
+              "Have you registered it via Provisioning::Handler.register?" \
+              "Using the default provisioner '#{default}'."
+            )
+          end
+
+          default
+        end
+      end
+
+      def default=(handler_class)
+        registry[:default] = handler_class if handler_class.present?
       end
 
       def default
-        handlers[:default] || ProvisioningHandler::Base
+        registry.fetch(:default) { ProvisioningHandler::Base }
       end
     end
   end
