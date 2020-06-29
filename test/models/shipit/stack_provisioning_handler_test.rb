@@ -9,7 +9,7 @@ module Shipit
     end
 
     test "uses the no-op handler as default when no default handler is registered" do
-      assert_equal Shipit::ProvisioningHandler::Base, Shipit::ProvisioningHandler.fetch("unregistered-handler")
+      assert_equal Shipit::ProvisioningHandler::Base, Shipit::ProvisioningHandler.default
     end
 
     test "allows registration of a default handler" do
@@ -20,11 +20,12 @@ module Shipit
       assert_equal mock_handler, Shipit::ProvisioningHandler.default
     end
 
-    test "the default handler is returned when an attempt to fetch an unregistered handler is made" do
-      default_handler = Shipit::ProvisioningHandler.default
+    test "an UnregisteredProvisioningHandlerError is raised when an attempt to fetch an unregistered handler is made" do
       unregistered_handler = mock("Mock Provisioning Handler")
 
-      assert_equal default_handler, Shipit::ProvisioningHandler.fetch(unregistered_handler)
+      assert_raises Shipit::ProvisioningHandler::NoRegisteredHandlerError do
+        Shipit::ProvisioningHandler.fetch(unregistered_handler)
+      end
     end
 
     test "registers handlers so they become fetchable" do
