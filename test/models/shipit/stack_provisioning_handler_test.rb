@@ -20,12 +20,13 @@ module Shipit
       assert_equal mock_handler, Shipit::ProvisioningHandler.default
     end
 
-    test "an UnregisteredProvisioningHandlerError is raised when an attempt to fetch an unregistered handler is made" do
+    test "UnregisteredProvisioningHandler is returned when an attempt to fetch an unregistered handler is made" do
       unregistered_handler = mock("Mock Provisioning Handler")
 
-      assert_raises Shipit::ProvisioningHandler::NoRegisteredHandlerError do
+      assert_equal(
+        Shipit::ProvisioningHandler::UnregisteredProvisioningHandler,
         Shipit::ProvisioningHandler.fetch(unregistered_handler)
-      end
+      )
     end
 
     test "registers handlers so they become fetchable" do

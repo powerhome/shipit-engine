@@ -2,8 +2,6 @@
 
 module Shipit
   module ProvisioningHandler
-    NoRegisteredHandlerError = Class.new(StandardError)
-
     class << self
       def registry
         @registry ||= reset_registry!
@@ -19,13 +17,7 @@ module Shipit
 
       def fetch(name)
         registry.fetch(name) do
-          if name.present?
-            raise(
-              NoRegisteredHandlerError,
-              "Failed to find a provisioning handler named '#{name}' in the ProvisioningHandler registry." \
-              "Have you registered it via Provisioning::Handler.register?"
-            )
-          end
+          return ProvisioningHandler::UnregisteredProvisioningHandler if name.present?
 
           default
         end
