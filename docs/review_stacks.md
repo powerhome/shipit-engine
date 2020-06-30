@@ -75,7 +75,7 @@ ActiveSupport::Reloader.to_prepare do
 end
 ```
 
-A default, no-op provisioning handler - `Shipit::ProvisioningHandler::Base` - is provided. When the name of an unregistered handler is requested from the `Shipit::ProvisioningHandler` a `Shipit::ProvisioningHandler::NoRegisteredHandlerError` exception will be raised.
+A default, no-op provisioning handler - `Shipit::ProvisioningHandler::Base` - is provided. When the name of an unregistered handler is requested from the `Shipit::ProvisioningHandler` the `Shipit::ProvisioningHandler::UnregisteredProvisiningHander` is used. Effectively, this prevents transitions of the provisioning state machine and locks the Review Stack indicating that an attempt to provision the Review Stack instance was made, but can't be completed until the Review Stack's Provisioning Handler is registered.
 
 The ProvisioningHandler for a give stack is discovered at runtime using the following order of precedence:
 
