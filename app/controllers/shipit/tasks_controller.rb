@@ -70,7 +70,7 @@ module Shipit
     end
 
     def stack
-      @stack ||= Stack.from_param!(params[:stack_id])
+      @stack ||= Stack.from_param!(params[:stack_id]).becomes(Stack)
     end
 
     def task_params
