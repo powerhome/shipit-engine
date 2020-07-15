@@ -197,9 +197,9 @@ ActiveRecord::Schema.define(version: 2020_07_14_210043) do
     t.bigint "github_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["commit_id", "github_id"], name: "index_release_statuses_on_commit_id_and_github_id"
-    t.index ["stack_id", "commit_id"], name: "index_release_statuses_on_stack_id_and_commit_id"
-    t.index ["user_id"], name: "index_release_statuses_on_user_id"
+    t.index ["commit_id", "github_id"], name: "index_deploy_statuses_on_commit_id_and_github_id"
+    t.index ["stack_id", "commit_id"], name: "index_deploy_statuses_on_stack_id_and_commit_id"
+    t.index ["user_id"], name: "index_deploy_statuses_on_user_id"
   end
 
   create_table "repositories", force: :cascade do |t|
@@ -273,7 +273,7 @@ ActiveRecord::Schema.define(version: 2020_07_14_210043) do
     t.integer "additions", limit: 4, default: 0
     t.integer "deletions", limit: 4, default: 0
     t.text "definition", limit: 65535
-    t.binary "gzip_output", limit: 16777215
+    t.binary "gzip_output"
     t.boolean "rollback_once_aborted", default: false, null: false
     t.text "env"
     t.integer "confirmations", default: 0, null: false
