@@ -320,13 +320,4 @@ ActiveRecord::Schema.define(version: 2020_07_14_210043) do
     t.index ["updated_at"], name: "index_users_on_updated_at"
   end
 
-  add_foreign_key "commit_deployment_statuses", "commit_deployments"
-  add_foreign_key "commit_deployments", "commits"
-  add_foreign_key "commit_deployments", "tasks"
-  add_foreign_key "memberships", "teams"
-  add_foreign_key "memberships", "users"
-  add_foreign_key "pull_requests", "commits", column: "base_commit_id"
-  add_foreign_key "pull_requests", "commits", column: "head_id"
-  add_foreign_key "pull_requests", "stacks"
-  add_foreign_key "pull_requests", "users", column: "merge_requested_by_id"
 end
