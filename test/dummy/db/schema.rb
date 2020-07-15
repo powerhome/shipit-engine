@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_07_06_145406) do
+ActiveRecord::Schema.define(version: 2020_07_14_210043) do
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -197,9 +197,9 @@ ActiveRecord::Schema.define(version: 2020_07_06_145406) do
     t.bigint "github_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["commit_id", "github_id"], name: "index_deploy_statuses_on_commit_id_and_github_id"
-    t.index ["stack_id", "commit_id"], name: "index_deploy_statuses_on_stack_id_and_commit_id"
-    t.index ["user_id"], name: "index_deploy_statuses_on_user_id"
+    t.index ["commit_id", "github_id"], name: "index_release_statuses_on_commit_id_and_github_id"
+    t.index ["stack_id", "commit_id"], name: "index_release_statuses_on_stack_id_and_commit_id"
+    t.index ["user_id"], name: "index_release_statuses_on_user_id"
   end
 
   create_table "repositories", force: :cascade do |t|
@@ -207,7 +207,7 @@ ActiveRecord::Schema.define(version: 2020_07_06_145406) do
     t.string "name", limit: 100, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.boolean "provision_pr_stacks", default: false
+    t.boolean "review_stacks_enabled", default: false
     t.integer "provisioning_behavior", default: 0
     t.string "provisioning_label_name"
     t.index ["owner", "name"], name: "repository_unicity", unique: true
@@ -273,7 +273,7 @@ ActiveRecord::Schema.define(version: 2020_07_06_145406) do
     t.integer "additions", limit: 4, default: 0
     t.integer "deletions", limit: 4, default: 0
     t.text "definition", limit: 65535
-    t.binary "gzip_output"
+    t.binary "gzip_output", limit: 16777215
     t.boolean "rollback_once_aborted", default: false, null: false
     t.text "env"
     t.integer "confirmations", default: 0, null: false
@@ -320,4 +320,13 @@ ActiveRecord::Schema.define(version: 2020_07_06_145406) do
     t.index ["updated_at"], name: "index_users_on_updated_at"
   end
 
+  add_foreign_key "commit_deployment_statuses", "commit_deployments"
+  add_foreign_key "commit_deployments", "commits"
+  add_foreign_key "commit_deployments", "tasks"
+  add_foreign_key "memberships", "teams"
+  add_foreign_key "memberships", "users"
+  add_foreign_key "pull_requests", "commits", column: "base_commit_id"
+  add_foreign_key "pull_requests", "commits", column: "head_id"
+  add_foreign_key "pull_requests", "stacks"
+  add_foreign_key "pull_requests", "users", column: "merge_requested_by_id"
 end

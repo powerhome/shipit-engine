@@ -64,7 +64,7 @@ module Shipit
     end
 
     test "provision_pr_stacks defaults to false" do
-      assert_equal false, Repository.new.provision_pr_stacks
+      assert_equal false, Repository.new.review_stacks_enabled
     end
 
     test "from_github_repo_name" do
