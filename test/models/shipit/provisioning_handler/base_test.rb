@@ -19,8 +19,8 @@ module Shipit
         )
       end
 
-      test "provides a default #can_provision? handler" do
-        assert_equal true, handler.can_provision?
+      test "provides a default #provision? handler" do
+        assert_equal true, handler.provision?
       end
 
       private

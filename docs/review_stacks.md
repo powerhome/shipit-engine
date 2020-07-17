@@ -54,13 +54,13 @@ class KubernetesProvisioningHandler < Shipit::ProvisioningHandler::Base
     # delete the namespace, etc.
   end
 
-  def can_provision?
+  def provision?
     # interrogate status of resources to determin if ample head room exists to provision a new review stack
   end
 end
 ```
 
-In the case where a ``ProvisioningHandler` does not specify a `#can_provision?` predicate, the provisioning handler will always attempt to provision a Review Stack.
+In the case where a ``ProvisioningHandler` does not specify a `#provision?` predicate, the provisioning handler will always attempt to provision a Review Stack.
 
 The host application **MUST** `#register` - whitelist - the custom ProvisioningHandler in the `Shipit::ProvisioningHandler` registry. This will  most likely happen as part of a shipit-engine initialization routine in the host application. For example:
 

@@ -18,7 +18,7 @@ module Shipit
       # An (optional) guard to prevent provisioning. Intended to be
       # use to set logic to determine if enough actual resources exist
       # to complete the provisioning request.
-      def can_provision?
+      def provision?
         true
       end
 
