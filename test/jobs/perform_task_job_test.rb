@@ -141,11 +141,7 @@ module Shipit
 
     test "records stack support for rollbacks and fetching deployed revision" do
       @job.stubs(:capture!)
-<<<<<<< HEAD
       @commands = stub(commands: nil)
-=======
-      @commands = stub
->>>>>>> master
       @commands.stubs(:fetched?).returns([])
       @commands.stubs(:fetch).returns([])
       @commands.stubs(:clone).returns([])
