@@ -5,7 +5,11 @@ module Shipit
 
     class << self
       def serializer_class
-        @serializer_class ||= "#{name}Serializer".constantize
+        if defined? @serializer_class
+          @serializer_class
+        else
+          @serializer_class = "#{name}Serializer".safe_constantize
+        end
       end
     end
 
