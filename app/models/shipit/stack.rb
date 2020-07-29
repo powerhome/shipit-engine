@@ -52,8 +52,6 @@ module Shipit
 
     default_scope { preload(:repository) }
 
-    default_scope { preload(:repository) }
-
     def env
       {
         'ENVIRONMENT' => environment,
