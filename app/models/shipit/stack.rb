@@ -2,7 +2,7 @@
 require 'fileutils'
 
 module Shipit
-  class Stack < ActiveRecord::Base
+  class Stack < Record
     NotYetSynced = Class.new(StandardError)
 
     module NoDeployedCommit
@@ -49,6 +49,8 @@ module Shipit
 
     include DeferredTouch
     deferred_touch repository: :updated_at
+
+    default_scope { preload(:repository) }
 
     default_scope { preload(:repository) }
 
