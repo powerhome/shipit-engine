@@ -22,10 +22,10 @@ namespace :cron do
   end
 
   task clear_stale_caches: :environment do
-    ReviewStack.clear_stale_caches
+    Shipit::ReviewStack.clear_stale_caches
   end
 
   task delete_old_deployment_directories: :environment do
-    ReviewStack.delete_old_deployment_directories
+    Shipit::ReviewStack.delete_old_deployment_directories
   end
 end
