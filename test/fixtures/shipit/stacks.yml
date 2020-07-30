@@ -586,7 +586,7 @@ review_stack:
 
 archived_25hours_ago:
   type: Shipit::ReviewStack
-  repository: shipit
+  repository: cyclimse
   environment: archived_25hours_ago
   branch: master
   ignore_ci: true
@@ -600,7 +600,7 @@ archived_25hours_ago:
 
 archived_6hours_ago:
   type: Shipit::ReviewStack
-  repository: shipit
+  repository: cyclimse
   environment: archived_6hours_ago
   branch: master
   ignore_ci: true
@@ -614,7 +614,7 @@ archived_6hours_ago:
 
 archived_30minutes_ago:
   type: Shipit::ReviewStack
-  repository: shipit
+  repository: cyclimse
   environment: archived_30minutes_ago
   branch: master
   ignore_ci: true
