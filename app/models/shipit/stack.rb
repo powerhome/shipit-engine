@@ -582,10 +582,6 @@ module Shipit
       links_spec.transform_values { |url| context.interpolate(url) }
     end
 
-    def enqueue
-      update!(enqueued: true)
-    end
-
     private
 
     def clear_cache

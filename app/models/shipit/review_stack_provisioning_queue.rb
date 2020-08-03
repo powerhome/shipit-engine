@@ -7,7 +7,7 @@ module Shipit
     end
 
     def self.add(stack)
-      stack.enqueue
+      stack.enqueue_for_provisioning
     end
 
     def self.queued_stacks
