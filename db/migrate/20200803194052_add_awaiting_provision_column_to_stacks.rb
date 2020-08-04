@@ -1,4 +1,4 @@
-class AddEnqueuedColumnToStacks < ActiveRecord::Migration[6.0]
+class AddAwaitingProvisionColumnToStacks < ActiveRecord::Migration[6.0]
   def up
     add_column :stacks, :awaiting_provision, :boolean, null: false, default: false
     add_index :stacks, :awaiting_provision
