@@ -50,11 +50,11 @@ module Shipit
     end
 
     def enqueue_for_provisioning
-      update!(enqueued: true)
+      update!(awaiting_provision: true)
     end
 
     def remove_from_provisioning_queue
-      update!(enqueued: false)
+      update!(awaiting_provision: false)
     end
 
     has_one :review_request, -> { where(review_request: true) }, class_name: "PullRequest", foreign_key: :stack_id
