@@ -2,6 +2,9 @@
 
 module Shipit
   class ReviewStack < Shipit::Stack
+    AWAITING_PROVISIONING_LOCK_REASON = "Awaiting Provisioning"
+    AWAITING_PROVISIONING_LOCK_REASON_CODE = "AWAITING_PROVISIONING"
+
     state_machine :provision_status, initial: :deprovisioned do
       state :provisioned
       state :provisioning
@@ -51,10 +54,16 @@ module Shipit
 
     def enqueue_for_provisioning
       update!(awaiting_provision: true)
+      lock(
+        AWAITING_PROVISIONING_LOCK_REASON,
+        AnonymousUser.new,
+        code: AWAITING_PROVISIONING_LOCK_REASON_CODE
+      )
     end
 
     def remove_from_provisioning_queue
       update!(awaiting_provision: false)
+      unlock
     end
 
     has_one :review_request, -> { where(review_request: true) }, class_name: "PullRequest", foreign_key: :stack_id

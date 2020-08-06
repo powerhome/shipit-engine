@@ -30,5 +30,25 @@ module Shipit
         end
       end
     end
+
+    test ".enqueue_for_provisioning locks deployments" do
+      assert_changes -> { @stack.locked? }, from: false, to: true do
+        assert_changes -> { @stack.lock_reason_code }, from: nil, to: ReviewStack::AWAITING_PROVISIONING_LOCK_REASON_CODE do
+          @stack.enqueue_for_provisioning
+        end
+      end
+    end
+
+    test ".remove_from_provisioning_queue removes locks deployments" do
+      @stack.update!(
+        lock_reason: ReviewStack::AWAITING_PROVISIONING_LOCK_REASON,
+        lock_reason_code: ReviewStack::AWAITING_PROVISIONING_LOCK_REASON_CODE
+      )
+      assert_changes -> { @stack.locked? }, from: true, to: false do
+        assert_changes -> { @stack.lock_reason_code }, from: ReviewStack::AWAITING_PROVISIONING_LOCK_REASON_CODE, to: nil do
+          @stack.remove_from_provisioning_queue
+        end
+      end
+    end
   end
 end

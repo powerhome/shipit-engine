@@ -9,7 +9,9 @@ module Shipit
       review_stack.update(lock_reason: nil)
 
       assert_changes -> { review_stack.awaiting_provision }, from: false, to: true do
-        queue.add(review_stack)
+        assert_changes -> { review_stack.locked? }, from: false, to: true do
+          queue.add(review_stack)
+        end
       end
     end
 
