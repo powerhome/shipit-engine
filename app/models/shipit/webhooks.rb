@@ -5,7 +5,11 @@ module Shipit
       def default_handlers
         {
           'push' => [Handlers::PushHandler],
-          'pull_request' => [Handlers::PullRequest::OpenedHandler],
+          'pull_request' => [
+            Handlers::PullRequest::OpenedHandler,
+            Handlers::PullRequest::ClosedHandler,
+            Handlers::PullRequest::ReopenedHandler
+          ],
           'status' => [Handlers::StatusHandler],
           'membership' => [Handlers::MembershipHandler],
           'check_suite' => [Handlers::CheckSuiteHandler],
