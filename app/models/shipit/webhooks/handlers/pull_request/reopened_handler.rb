@@ -6,11 +6,26 @@ module Shipit
       module PullRequest
         class ReopenedHandler < Shipit::Webhooks::Handlers::Handler
           params do
-            requires :action
-            requires :number
-            requires :repository
-            requires :pull_request
-            requires :sender
+            requires :action, String
+            requires :number, Integer
+            requires :pull_request do
+              requires :id, Integer
+              requires :number, Integer
+              requires :url, String
+              requires :title, String
+              requires :state, String
+              requires :additions, Integer
+              requires :deletions, Integer
+              requires :user do
+                requires :login, String
+              end
+              requires :assignees, Array do
+                requires :login, String
+              end
+            end
+            requires :repository do
+              requires :full_name, String
+            end
           end
 
           def process
@@ -22,7 +37,7 @@ module Shipit
           private
 
           def repository
-            @repository ||= Shipit::Repository.from_github_repo_name(params.repository["full_name"]) || Shipit::NullRepository.new
+            @repository ||= Shipit::Repository.from_github_repo_name(params.repository.full_name) || Shipit::NullRepository.new
           end
 
           def stack

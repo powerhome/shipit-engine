@@ -84,7 +84,7 @@ module Shipit
             )
             payload = payload_parsed(:pull_request_reopened)
 
-            assert_difference -> { Shipit::MergeRequest.count } do
+            assert_difference -> { Shipit::PullRequest.count } do
               Shipit::Webhooks::Handlers::PullRequest::ReopenedHandler.new(payload).process
             end
           end

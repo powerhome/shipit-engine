@@ -41,7 +41,7 @@ module Shipit
             Shipit.github.api.expects(:user).with("some-new-user-login")
               .returns(github_user)
             payload = payload_parsed(:pull_request_opened)
-            payload["sender"]["login"] = github_user.login
+            payload["pull_request"]["user"]["login"] = github_user.login
 
             assert_difference -> { Shipit::User.count } do
               OpenedHandler.new(payload).process
@@ -77,7 +77,7 @@ module Shipit
           test "auto-created stack should have pull request assigned" do
             payload = payload_parsed(:pull_request_opened)
 
-            assert_difference -> { Shipit::MergeRequest.count } do
+            assert_difference -> { Shipit::PullRequest.count } do
               OpenedHandler.new(payload).process
             end
           end

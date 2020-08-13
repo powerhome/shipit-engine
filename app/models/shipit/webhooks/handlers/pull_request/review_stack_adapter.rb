@@ -71,16 +71,12 @@ module Shipit
           end
 
           def create!
-            ensure_user_exists
-            stack = scope.create(stack_attributes)
-            Shipit::ReviewStackProvisioningQueue.add(stack)
+            stack = scope.build(stack_attributes)
+            stack.pull_request = Shipit::PullRequest.from_github(params.pull_request)
             stack.save!
-            Shipit::MergeRequest.assign_to_stack!(stack, pr_number)
-            @stack = stack
-          end
+            Shipit::ReviewStackProvisioningQueue.add(stack)
 
-          def ensure_user_exists
-            user
+            @stack = stack
           end
 
           def stack_attributes
