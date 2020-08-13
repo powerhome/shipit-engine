@@ -5,12 +5,12 @@ module Shipit
     module Handlers
       module PullRequest
         class ClosedHandler < Shipit::Webhooks::Handlers::Handler
-              params do
-                requires :action
-                requires :number
-                requires :repository
-                requires :sender
-              end
+          params do
+            requires :action
+            requires :number
+            requires :repository
+            requires :sender
+          end
 
           def process
             return unless respond_to_pull_request_closed?

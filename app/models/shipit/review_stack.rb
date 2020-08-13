@@ -22,6 +22,8 @@ module Shipit
       end
     end
 
+    has_one :pull_request, foreign_key: :stack_id
+
     after_commit :emit_added_hooks, on: :create
     after_commit :emit_updated_hooks, on: :update
     after_commit :emit_removed_hooks, on: :destroy
@@ -80,8 +82,6 @@ module Shipit
     def remove_from_provisioning_queue
       update!(awaiting_provision: false)
     end
-
-    has_one :review_request, -> { where(review_request: true) }, class_name: "MergeRequest", foreign_key: :stack_id
 
     def to_partial_path
       "shipit/stacks/stack"
