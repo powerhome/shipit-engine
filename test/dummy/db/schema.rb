@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_06_173912) do
+ActiveRecord::Schema.define(version: 2020_08_13_093812) do
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -138,6 +138,13 @@ ActiveRecord::Schema.define(version: 2020_08_06_173912) do
     t.index ["user_id"], name: "index_memberships_on_user_id"
   end
 
+  create_table "merge_request_assignments", force: :cascade do |t|
+    t.integer "merge_request_id"
+    t.integer "user_id"
+    t.index ["merge_request_id"], name: "index_merge_request_assignments_on_merge_request_id"
+    t.index ["user_id"], name: "index_merge_request_assignments_on_user_id"
+  end
+
   create_table "merge_requests", force: :cascade do |t|
     t.integer "stack_id", null: false
     t.integer "number", null: false
@@ -181,9 +188,9 @@ ActiveRecord::Schema.define(version: 2020_08_06_173912) do
   end
 
   create_table "pull_request_assignments", force: :cascade do |t|
-    t.integer "merge_request_id"
+    t.integer "pull_request_id"
     t.integer "user_id"
-    t.index ["merge_request_id"], name: "index_pull_request_assignments_on_merge_request_id"
+    t.index ["pull_request_id"], name: "index_pull_request_assignments_on_pull_request_id"
     t.index ["user_id"], name: "index_pull_request_assignments_on_user_id"
   end
 
