@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 module Shipit
   class NullRepository
+    def id
+      nil
+    end
+
     def stacks
       Shipit::Stack.none
     end
