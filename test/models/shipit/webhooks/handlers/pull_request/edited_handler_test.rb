@@ -11,7 +11,7 @@ module Shipit
             assert_raise(StandardError) { EditedHandler.new(payload_parsed(:invalid_pull_request)) }
           end
 
-          test "updates the existing pull_request" do
+          test "updates the existing PullRequest" do
             pull_request = shipit_pull_requests(:shipit_review)
             payload = payload_parsed(:pull_request_opened)
             payload["action"] = "edited"
@@ -23,7 +23,7 @@ module Shipit
             end
           end
 
-          test "does not attempt to update non existent pull_request objects" do
+          test "does not attempt to update when PullRequest does not exist" do
             unknown_pull_request_number = 999
             payload = payload_parsed(:pull_request_opened)
             payload["number"] = unknown_pull_request_number
