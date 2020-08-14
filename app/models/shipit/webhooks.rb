@@ -8,7 +8,8 @@ module Shipit
           'pull_request' => [
             Handlers::PullRequest::OpenedHandler,
             Handlers::PullRequest::ClosedHandler,
-            Handlers::PullRequest::ReopenedHandler
+            Handlers::PullRequest::ReopenedHandler,
+            Handlers::PullRequest::EditedHandler,
           ],
           'status' => [Handlers::StatusHandler],
           'membership' => [Handlers::MembershipHandler],
