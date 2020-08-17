@@ -11,6 +11,7 @@ module Shipit
             Handlers::PullRequest::ReopenedHandler,
             Handlers::PullRequest::EditedHandler,
             Handlers::PullRequest::AssignedHandler,
+            Handlers::PullRequest::LabeledHandler,
           ],
           'status' => [Handlers::StatusHandler],
           'membership' => [Handlers::MembershipHandler],

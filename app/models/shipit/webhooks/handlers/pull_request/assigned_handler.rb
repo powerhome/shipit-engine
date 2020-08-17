@@ -22,9 +22,15 @@ module Shipit
               requires :assignees, Array do
                 requires :login, String
               end
+              requires :labels, Array do
+                requires :name, String
+              end
             end
             requires :repository do
               requires :full_name, String
+            end
+            requires :sender do
+              requires :login, String
             end
           end
 
