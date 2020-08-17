@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_13_134712) do
+ActiveRecord::Schema.define(version: 2020_08_17_120832) do
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -129,6 +129,11 @@ ActiveRecord::Schema.define(version: 2020_08_13_134712) do
     t.index ["stack_id"], name: "index_hooks_on_stack_id"
   end
 
+  create_table "labels", force: :cascade do |t|
+    t.string "name"
+    t.index ["name"], name: "index_labels_on_name", unique: true
+  end
+
   create_table "memberships", force: :cascade do |t|
     t.integer "team_id", limit: 4
     t.integer "user_id", limit: 4
@@ -192,6 +197,14 @@ ActiveRecord::Schema.define(version: 2020_08_13_134712) do
     t.integer "user_id"
     t.index ["pull_request_id"], name: "index_pull_request_assignments_on_pull_request_id"
     t.index ["user_id"], name: "index_pull_request_assignments_on_user_id"
+  end
+
+  create_table "pull_request_labels", force: :cascade do |t|
+    t.integer "pull_request_id", null: false
+    t.integer "label_id", null: false
+    t.index ["label_id"], name: "index_pull_request_labels_on_label_id"
+    t.index ["pull_request_id", "label_id"], name: "index_pull_request_labels_on_pull_request_id_and_label_id", unique: true
+    t.index ["pull_request_id"], name: "index_pull_request_labels_on_pull_request_id"
   end
 
   create_table "pull_requests", force: :cascade do |t|
