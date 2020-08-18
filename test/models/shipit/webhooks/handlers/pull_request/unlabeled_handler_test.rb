@@ -6,21 +6,19 @@ module Shipit
   module Webhooks
     module Handlers
       module PullRequest
-        class LabeledHandlerTest < ActiveSupport::TestCase
+        class UnlabeledHandlerTest < ActiveSupport::TestCase
           test "validates payload" do
-            assert_raise(StandardError) { LabeledHandler.new(payload_parsed(:invalid_pull_request)) }
+            assert_raise(StandardError) { UnlabeledHandler.new(payload_parsed(:invalid_pull_request)) }
           end
 
-          test "ignores Github webhooks when the event is NOT 'labeled'" do
-            assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload_parsed(:pull_request_labeled).merge(action: "assigned")).process
+          test "ignores Github webhooks when the event is NOT 'unlabeled'" do
+            assert_no_difference -> { Shipit::Stack.not_archived.count } do
+              UnlabeledHandler.new(payload_parsed(:pull_request_opened).merge(action: "assigned")).process
             end
           end
 
           test "ignores Github PullRequest webhooks by default" do
-            assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload_parsed(:pull_request_with_no_repo)).process
-            end
+            UnlabeledHandler.new(payload_parsed(:pull_request_with_no_repo).merge(action: "closed")).process
           end
 
           test "ignores Github PullRequest webhooks when the Repository has disabled the Review Stacks feature" do
@@ -33,61 +31,17 @@ module Shipit
             )
 
             assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
+              UnlabeledHandler.new(payload_parsed(:pull_request_unlabeled)).process
             end
           end
 
           test "ignores Github PullRequest webhooks when the repository allows_all PullRequests to create ReviewStacks" do
-            repository = shipit_repositories(:shipit)
-            configure_provisioning_behavior(
-              repository: repository,
-              behavior: :allow_all
-            )
-
             assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
+              UnlabeledHandler.new(payload_parsed(:pull_request_unlabeled)).process
             end
           end
 
-          test "unarchives existing review stack when the repository creates ReviewStacks with allow_with_label and the label is present" do
-            stack = create_archived_stack
-            repository = shipit_repositories(:shipit)
-            configure_provisioning_behavior(
-              repository: repository,
-              behavior: :allow_with_label,
-              label: "pull-requests-label"
-            )
-            payload = payload_parsed(:pull_request_labeled)
-            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
-
-            LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
-
-            assert_not stack.reload.archived?, "Expected stack to be NOT be archived"
-            assert_pending_provision(stack)
-          end
-
-          test "creates and provisions a new review stack when the repository creates ReviewStacks with allow_with_label and the label is present" do
-            repository = shipit_repositories(:shipit)
-            configure_provisioning_behavior(
-              repository: repository,
-              behavior: :allow_with_label,
-              label: "pull-requests-label"
-            )
-            payload = payload_parsed(:pull_request_labeled)
-            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
-
-            LabeledHandler.new(payload).process
-
-            stack = shipit_repositories(:shipit).stacks.last
-            assert_equal stack.environment, "pr#{payload['number']}"
-            assert_equal stack.continuous_deployment, false
-            assert_equal stack.ignore_ci, false
-            assert_equal stack.branch, payload["pull_request"]["head"]["ref"]
-            assert_not stack.archived?, "Expected stack to be NOT be archived"
-            assert_pending_provision(stack)
-          end
-
-          test "archives an existing review stack when the repository creates ReviewStacks with allow_with_label and the label is absent" do
+          test "archives existing review stack when the repository creates ReviewStacks with allow_with_label and the label is absent" do
             stack = create_stack
             repository = shipit_repositories(:shipit)
             configure_provisioning_behavior(
@@ -95,15 +49,13 @@ module Shipit
               behavior: :allow_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
-            payload["pull_request"]["labels"] = []
 
-            LabeledHandler.new(payload).process
+            UnlabeledHandler.new(payload_parsed(:pull_request_unlabeled)).process
 
             assert stack.reload.archived?, "Expected stack to be archived"
           end
 
-          test "deprovisions an existing review stack when the repository creates ReviewStacks with allow_with_label and the label is absent" do
+          test "deprovisions existing review stack when the repository creates ReviewStacks with allow_with_label and the label is absent" do
             stack = create_stack
             repository = shipit_repositories(:shipit)
             configure_provisioning_behavior(
@@ -111,10 +63,8 @@ module Shipit
               behavior: :allow_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
-            payload["pull_request"]["labels"] = []
 
-            LabeledHandler.new(payload).process
+            UnlabeledHandler.new(payload_parsed(:pull_request_unlabeled)).process
 
             assert_equal stack.reload.provision_status, "deprovisioning"
           end
@@ -126,12 +76,48 @@ module Shipit
               behavior: :allow_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
-            payload["pull_request"]["labels"] = []
 
             assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload).process
+              UnlabeledHandler.new(payload_parsed(:pull_request_unlabeled)).process
             end
+          end
+
+          test "unarchives existing review stack when the repository creates ReviewStacks with allow_with_label and the label is present" do
+            stack = create_archived_stack
+            repository = shipit_repositories(:shipit)
+            configure_provisioning_behavior(
+              repository: repository,
+              behavior: :allow_with_label,
+              label: "pull-requests-label"
+            )
+            payload = payload_parsed(:pull_request_unlabeled)
+            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
+
+            UnlabeledHandler.new(payload).process
+
+            assert_not stack.reload.archived?, "Expected stack to NOT be archived"
+            assert_pending_provision(stack)
+          end
+
+          test "creates and provisions a new review stack when the repository creates ReviewStacks with allow_with_label and the label is present" do
+            repository = shipit_repositories(:shipit)
+            configure_provisioning_behavior(
+              repository: repository,
+              behavior: :allow_with_label,
+              label: "pull-requests-label"
+            )
+            payload = payload_parsed(:pull_request_unlabeled)
+            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
+
+            UnlabeledHandler.new(payload).process
+
+            stack = shipit_repositories(:shipit).stacks.last
+            assert_equal stack.environment, "pr#{payload['number']}"
+            assert_equal stack.continuous_deployment, false
+            assert_equal stack.ignore_ci, false
+            assert_equal stack.branch, payload["pull_request"]["head"]["ref"]
+            assert_not stack.archived?, "Expected stack to be NOT be archived"
+            assert_pending_provision(stack)
           end
 
           test "archives an existing review stack when the repository creates ReviewStacks with prevent_with_label and the label is present" do
@@ -142,8 +128,10 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
+            payload = payload_parsed(:pull_request_unlabeled)
+            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
 
-            LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
+            UnlabeledHandler.new(payload).process
 
             assert stack.reload.archived?, "Expected stack to be archived"
           end
@@ -156,8 +144,10 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
+            payload = payload_parsed(:pull_request_unlabeled)
+            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
 
-            LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
+            UnlabeledHandler.new(payload).process
 
             assert_equal stack.reload.provision_status, "deprovisioning"
           end
@@ -169,9 +159,11 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
+            payload = payload_parsed(:pull_request_unlabeled)
+            payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
 
             assert_no_difference -> { Shipit::Stack.count } do
-              LabeledHandler.new(payload_parsed(:pull_request_labeled)).process
+              UnlabeledHandler.new(payload).process
             end
           end
 
@@ -183,10 +175,10 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
+            payload = payload_parsed(:pull_request_unlabeled)
             payload["pull_request"]["labels"] = []
 
-            LabeledHandler.new(payload).process
+            UnlabeledHandler.new(payload).process
 
             assert_not stack.reload.archived?, "Expected stack to NOT be archived"
             assert_pending_provision(stack)
@@ -199,10 +191,10 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
+            payload = payload_parsed(:pull_request_unlabeled)
             payload["pull_request"]["labels"] = []
 
-            LabeledHandler.new(payload).process
+            UnlabeledHandler.new(payload).process
 
             stack = shipit_repositories(:shipit).stacks.last
             assert_equal stack.environment, "pr#{payload['number']}"
@@ -220,11 +212,11 @@ module Shipit
               behavior: :prevent_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
+            payload = payload_parsed(:pull_request_unlabeled)
             payload["pull_request"]["labels"] = []
 
             assert_difference -> { Shipit::PullRequest.count } do
-              LabeledHandler.new(payload).process
+              UnlabeledHandler.new(payload).process
             end
           end
 
@@ -236,13 +228,13 @@ module Shipit
               behavior: :allow_with_label,
               label: "pull-requests-label"
             )
-            payload = payload_parsed(:pull_request_labeled)
+            payload = payload_parsed(:pull_request_unlabeled)
             payload["pull_request"]["labels"] << { "name" => "pull-requests-label" }
             payload["pull_request"]["state"] = "closed"
 
             Shipit::ReviewStackProvisioningQueue.expects(:add).never
 
-            LabeledHandler.new(payload).process
+            UnlabeledHandler.new(payload).process
           end
 
           def configure_provisioning_behavior(repository:, provisioning_enabled: true, behavior: :allow_all, label: nil)
@@ -272,7 +264,7 @@ module Shipit
 
             OpenedHandler.new(payload).process
 
-            stack = repository.review_stacks.last
+            stack = repository.stacks.last
             stack.update(provision_status: :provisioned)
             complete_active_tasks(stack)
 
@@ -281,8 +273,8 @@ module Shipit
 
           def complete_active_tasks(stack)
             active_tasks = stack
-                             .tasks
-                             .active
+              .tasks
+              .active
 
             active_tasks.map(&:run)
             active_tasks.reload
