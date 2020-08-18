@@ -43,11 +43,15 @@ module Shipit
           private
 
           def repository
-            @repository ||= Shipit::Repository.from_github_repo_name(params.repository.full_name) || Shipit::NullRepository.new
+            @repository ||=
+              Shipit::Repository.from_github_repo_name(params.repository.full_name) ||
+              Shipit::NullRepository.new
           end
 
           def stack
-            @stack ||= Shipit::Webhooks::Handlers::PullRequest::ReviewStackAdapter.new(params, scope: repository.review_stacks)
+            @stack ||=
+              Shipit::Webhooks::Handlers::PullRequest::ReviewStackAdapter
+                .new(params, scope: repository.review_stacks)
           end
 
           def pull_request

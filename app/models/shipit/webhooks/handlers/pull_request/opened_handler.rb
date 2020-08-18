@@ -37,13 +37,16 @@ module Shipit
           def process
             return unless respond_to_pull_request_opened?
 
-            Shipit::Webhooks::Handlers::PullRequest::ReviewStackAdapter.new(params, scope: repository.review_stacks).find_or_create!
+            Shipit::Webhooks::Handlers::PullRequest::ReviewStackAdapter
+              .new(params, scope: repository.review_stacks).find_or_create!
           end
 
           private
 
           def repository
-            @repository ||= Shipit::Repository.from_github_repo_name(params.repository.full_name) || Shipit::NullRepository.new
+            @repository ||=
+              Shipit::Repository.from_github_repo_name(params.repository.full_name) ||
+              Shipit::NullRepository.new
           end
 
           def pull_request

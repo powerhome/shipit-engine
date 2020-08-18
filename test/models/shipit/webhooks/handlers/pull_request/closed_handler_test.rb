@@ -148,8 +148,8 @@ module Shipit
 
           def complete_active_tasks(stack)
             active_tasks = stack
-                             .tasks
-                             .active
+              .tasks
+              .active
 
             active_tasks.map(&:run)
             active_tasks.reload
