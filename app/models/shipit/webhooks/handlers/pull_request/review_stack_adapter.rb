@@ -26,8 +26,9 @@ module Shipit
 
           def archive!(*args, &block)
             if stack.blank?
-              Rails.logger.info "Archiving in response to PR #{action} event for #{repo_name} PR #{pr_number} but no Stack " \
-                                "exists. Ignoring."
+              Rails.logger.info(
+                "Processing #{action} event for #{repo_name} PR #{pr_number} but no Stack exists. Ignoring."
+              )
               return true
             end
             return if stack.archived?
@@ -38,8 +39,9 @@ module Shipit
 
           def unarchive!(*args, &block)
             if stack.blank?
-              Rails.logger.info "Unarchiving in response to PR #{action} event for #{repo_name} PR #{pr_number} but no Stack " \
-                                "exists. Provisioning the stack instead."
+              Rails.logger.info(
+                "Processing #{action} event for #{repo_name} PR #{pr_number} but no ReviewStack exists. Creating."
+              )
               return create!
             end
             return unless stack.archived?

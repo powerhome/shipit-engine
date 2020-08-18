@@ -187,8 +187,8 @@ module Shipit
           def assert_pending_provision(stack)
             stack.reload
 
-            assert stack.awaiting_provision?, "Stack #{stack.environment} should be in the provisioning queue"
-            assert stack.deprovisioned?, "Stack #{stack.environment} should be pending provision"
+            assert(stack.awaiting_provision?, "Stack #{stack.environment} should be in the provisioning queue")
+            assert(stack.deprovisioned?, "Stack #{stack.environment} should be pending provision")
           end
         end
       end

@@ -30,7 +30,6 @@ module Shipit
     end
   end
 
-
   class Repository < ApplicationRecord
     OWNER_MAX_SIZE = 39
     private_constant :OWNER_MAX_SIZE
