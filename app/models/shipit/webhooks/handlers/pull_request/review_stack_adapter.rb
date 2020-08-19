@@ -16,10 +16,6 @@ module Shipit
             @stack ||= scope.find_by(environment: environment)
           end
 
-          def tracked?
-            stack.present?
-          end
-
           def find_or_create!
             stack || create!
           end
