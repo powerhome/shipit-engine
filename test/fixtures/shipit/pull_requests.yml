@@ -7,3 +7,13 @@ shipit_review:
   state: open
   additions: 23
   deletions: 43
+
+review_stack_review:
+  stack: review_stack
+  number: 62
+  title: Super duper nice feature
+  github_id: 42424424242424
+  api_url: https://api.github.com/repos/shopify/shipit-engine/pulls/62
+  state: open
+  additions: 23
+  deletions: 43

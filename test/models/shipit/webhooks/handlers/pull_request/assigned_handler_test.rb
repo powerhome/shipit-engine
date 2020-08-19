@@ -18,15 +18,15 @@ module Shipit
           end
 
           test "updates the existing PullRequest's assignees" do
-            pull_request = shipit_pull_requests(:shipit_review)
+            pull_request = shipit_pull_requests(:review_stack_review)
             pull_request.assignees.clear
             payload = payload_parsed(:pull_request_assigned)
             payload["number"] = pull_request.number
             payload["pull_request"]["number"] = pull_request.number
 
-            assert_changes -> { pull_request.reload.assignees.count } do
-              AssignedHandler.new(payload).process
-            end
+            AssignedHandler.new(payload).process
+
+            assert [shipit_users(:codertocat)], pull_request.reload.assignees
           end
 
           test "does not attempt to update when PullRequest does not exist" do

@@ -12,7 +12,7 @@ module Shipit
           end
 
           test "updates the existing PullRequest" do
-            pull_request = shipit_pull_requests(:shipit_review)
+            pull_request = shipit_pull_requests(:review_stack_review)
             payload = payload_parsed(:pull_request_opened)
             payload["action"] = "edited"
             payload["number"] = pull_request.number
