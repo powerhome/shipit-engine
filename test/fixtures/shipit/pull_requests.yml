@@ -7,3 +7,13 @@ shipit_review:
   state: open
   additions: 23
   deletions: 43
+
+review_stack_review:
+  stack: review_stack
+  number: 100
+  title: Review Stack Pull Request
+  github_id: 100110001
+  api_url: https://api.github.com/repos/shopify/shipit-engine/pulls/100
+  state: open
+  additions: 1
+  deletions: 70

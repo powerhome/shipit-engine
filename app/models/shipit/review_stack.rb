@@ -67,6 +67,18 @@ module Shipit
       end
     end
 
+    def env
+      return super unless pull_request.present?
+
+      super
+        .merge(
+          pull_request
+            .labels
+            .map(&:name)
+            .each_with_object({}) { |label_name, labels| labels[label_name.upcase] = "true" }
+        )
+    end
+
     def provisioner
       provisioner_class.new(self)
     end

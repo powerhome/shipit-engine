@@ -47,5 +47,16 @@ module Shipit
         @review_stack.destroy!
       end
     end
+
+    test "#env includes the stack's pull request labels" do
+      stack = shipit_stacks(:review_stack)
+      stack.pull_request.labels = [
+        Shipit::Label.find_or_create_by(name: "wip"),
+        Shipit::Label.find_or_create_by(name: "bug"),
+      ]
+
+      assert_equal stack.env["WIP"], "true"
+      assert_equal stack.env["BUG"], "true"
+    end
   end
 end
