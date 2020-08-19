@@ -145,16 +145,6 @@ module Shipit
       merge_request
     end
 
-    def self.assign_to_stack!(stack, number)
-      merge_request = MergeRequest.find_or_create_by!(
-        stack: stack,
-        number: number,
-        review_request: true,
-      )
-      merge_request.schedule_refresh!
-      merge_request
-    end
-
     def reject!(reason)
       unless REJECTION_REASONS.include?(reason)
         raise ArgumentError, "invalid reason: #{reason.inspect}, must be one of: #{REJECTION_REASONS.inspect}"
