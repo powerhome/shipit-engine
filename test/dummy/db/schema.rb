@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_17_120832) do
+ActiveRecord::Schema.define(version: 2020_08_23_172649) do
 
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
@@ -219,6 +219,8 @@ ActiveRecord::Schema.define(version: 2020_08_17_120832) do
     t.integer "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "head_id"
+    t.index ["head_id"], name: "index_pull_requests_on_head_id"
     t.index ["stack_id", "github_id"], name: "index_pull_requests_on_stack_id_and_github_id", unique: true
     t.index ["stack_id", "number"], name: "index_pull_requests_on_stack_id_and_number", unique: true
     t.index ["stack_id"], name: "index_pull_requests_on_stack_id"
