@@ -70,10 +70,11 @@ module Shipit
 
           def create!
             stack = scope.create!(stack_attributes)
-            Shipit::PullRequest.create!(
-              stack: stack,
-              github_pull_request: params.pull_request
-            )
+            stack
+              .build_pull_request
+              .update!(
+                github_pull_request: params.pull_request
+              )
 
             Shipit::ReviewStackProvisioningQueue.add(stack)
 
