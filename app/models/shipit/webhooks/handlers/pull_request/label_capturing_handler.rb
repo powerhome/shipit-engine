@@ -96,7 +96,7 @@ module Shipit
           end
 
           def capture_labels
-            pull_request = stack.pull_request
+            return unless pull_request = stack.pull_request
 
             shipit_labels = params.pull_request.labels.map do |github_label|
               Shipit::Label.find_or_create_from_github!(github_label)
