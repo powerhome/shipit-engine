@@ -14,6 +14,26 @@ module Shipit
     has_many :pull_request_labels
     has_many :labels, through: :pull_request_labels
 
+    after_create_commit :emit_create_hooks
+    after_update_commit :emit_update_hooks
+    after_destroy_commit :emit_destroy_hooks
+
+    def emit_destroy_hooks
+      emit_hooks(:destroyed)
+    end
+
+    def emit_create_hooks
+      emit_hooks(:created)
+    end
+
+    def emit_update_hooks
+      emit_hooks(:updated)
+    end
+
+    def emit_hooks(reason)
+      Hook.emit('pull_request', stack, action: reason, pull_request: self, stack: stack)
+    end
+
     def github_pull_request=(github_pull_request)
       self.github_id = github_pull_request.id
       self.number = github_pull_request.number
