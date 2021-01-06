@@ -46,7 +46,15 @@ module Shipit
     end
 
     def checkout(commit)
-      git('checkout', commit.sha, chdir: @stack.git_path)
+      git('checkout', commit.sha, chdir: steps_directory)
+    end
+
+    def checkout_branch(branch = @stack.branch)
+      git('checkout', branch, chdir: steps_directory)
+    end
+
+    def clean_repo
+      git('clean', '-f', '-d', chdir: steps_directory)
     end
 
     def clone
@@ -82,11 +90,6 @@ module Shipit
 
     def steps_directory
       @stack.git_path
-      # if sub_directory = deploy_spec.directory.presence
-      #   File.join(@task.working_directory, sub_directory)
-      # else
-      #   @task.working_directory
-      # end
     end
   end
 end

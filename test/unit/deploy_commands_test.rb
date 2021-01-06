@@ -81,9 +81,9 @@ module Shipit
       assert_equal ['git', 'checkout', @deploy.until_commit.sha], command.args
     end
 
-    test "#checkout checks out the deployed commit from the working directory" do
+    test "#checkout checks out the deployed commit from the cached git directory" do
       command = @commands.checkout(@deploy.until_commit)
-      assert_equal @deploy.working_directory, command.chdir
+      assert_equal @deploy.stack.git_path, command.chdir
     end
 
     test "#perform calls cap $environment deploy" do
@@ -105,20 +105,20 @@ module Shipit
       assert_equal ['bundle exec cap $ENVIRONMENT deploy:rollback'], step.args
     end
 
-    test "#perform calls cap $environment deploy from the working_directory" do
+    test "#perform calls cap $environment deploy from the cached git directory" do
       commands = @commands.perform
       assert_equal 1, commands.length
       command = commands.first
-      assert_equal @deploy.working_directory, command.chdir
+      assert_equal @deploy.stack.git_path, command.chdir
     end
 
-    test "the working_directory can be overriten in the spec" do
-      @deploy_spec.stubs(:directory).returns('my_directory')
-      commands = @commands.perform
-      assert_equal 1, commands.length
-      command = commands.first
-      assert_equal File.join(@deploy.working_directory, 'my_directory'), command.chdir
-    end
+    # test "the working_directory can be overriten in the spec" do
+    #   @deploy_spec.stubs(:directory).returns('my_directory')
+    #   commands = @commands.perform
+    #   assert_equal 1, commands.length
+    #   command = commands.first
+    #   assert_equal File.join(@deploy.working_directory, 'my_directory'), command.chdir
+    # end
 
     test "#perform calls cap $environment deploy with the SHA in the environment" do
       commands = @commands.perform

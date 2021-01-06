@@ -12,6 +12,8 @@ module Shipit
         run
       ensure
         @commands.clear_working_directory
+        @commands.checkout_branch
+        @commands.clean_repo
       end
 
       def run
@@ -74,7 +76,7 @@ module Shipit
             end
           end
         end
-        # capture_all!(@commands.clone)
+
         capture!(@commands.checkout(@task.until_commit))
       end
 
