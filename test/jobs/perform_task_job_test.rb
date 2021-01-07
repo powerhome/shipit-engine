@@ -25,13 +25,13 @@ module Shipit
       Commands.expects(:for).with(@deploy).returns(@commands)
 
       @commands.expects(:fetched?).once.returns(FakeSuccessfulCommand.new)
+      @commands.expects(:checkout_branch).once
+      @commands.expects(:clean_repo).once
       @commands.expects(:checkout).with(@deploy.until_commit).once
       @commands.expects(:install_dependencies).returns([]).once
       @commands.expects(:perform).returns([]).once
 
       @commands.expects(:clear_working_directory)
-      @commands.expects(:checkout_branch)
-      @commands.expects(:clean_repo)
 
       @job.perform(@deploy)
     end

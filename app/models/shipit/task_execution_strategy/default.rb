@@ -12,8 +12,6 @@ module Shipit
         run
       ensure
         @commands.clear_working_directory
-        @commands.checkout_branch
-        @commands.clean_repo
       end
 
       def run
@@ -77,6 +75,9 @@ module Shipit
           end
         end
 
+        # Reset repository to saved branch
+        capture!(@commands.checkout_branch)
+        capture(@commands.clean_repo)
         capture!(@commands.checkout(@task.until_commit))
       end
 
