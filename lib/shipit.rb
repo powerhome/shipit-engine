@@ -66,6 +66,7 @@ module Shipit
 
   attr_accessor :disable_api_authentication, :timeout_exit_codes
   attr_writer(
+    :additional_checks,
     :internal_hook_receivers,
     :preferred_org_emails,
     :task_execution_strategy,
@@ -74,6 +75,10 @@ module Shipit
 
   def task_execution_strategy
     @task_execution_strategy ||= Shipit::TaskExecutionStrategy::Default
+  end
+
+  def additional_checks
+    @additional_checks ||= proc { |_stack| true }
   end
 
   self.timeout_exit_codes = [].freeze

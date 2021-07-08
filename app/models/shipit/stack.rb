@@ -361,7 +361,7 @@ module Shipit
     end
 
     def deployable?
-      !locked? && !active_task? && !awaiting_provision?
+      !locked? && !active_task? && !awaiting_provision? && Shipit.additional_checks.call(self)
     end
 
     def allows_merges?
