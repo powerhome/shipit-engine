@@ -44,8 +44,7 @@ module Shipit
       # TODO: Two options here
       # We can either not use commit.author, and let it default to anonymous
       # Or we can use additional fields to try and match an author
-      pp(github_commit)
-      Rails.logger.info("Github commit #{github_commit}")
+      Rails.logger.info("Github commit #{github_commit.to_json}")
       find_or_create_from_github(github_commit.author.presence || github_commit.commit.author.presence)
     end
 
