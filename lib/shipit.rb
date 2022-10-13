@@ -5,7 +5,7 @@ require 'state_machines-activerecord'
 require 'validate_url'
 require 'responders'
 require 'explicit-parameters'
-require 'attr_encrypted'
+require 'paquito'
 
 require 'sass-rails'
 require 'coffee-rails'
@@ -64,7 +64,8 @@ module Shipit
 
   delegate :table_name_prefix, to: :secrets
 
-  attr_accessor :disable_api_authentication, :timeout_exit_codes
+  attr_accessor :disable_api_authentication, :timeout_exit_codes, :deployment_checks, :respect_bare_shipit_file,
+    :database_serializer
   attr_writer(
     :internal_hook_receivers,
     :preferred_org_emails,
@@ -77,6 +78,9 @@ module Shipit
   end
 
   self.timeout_exit_codes = [].freeze
+  self.respect_bare_shipit_file = true
+
+  alias_method :respect_bare_shipit_file?, :respect_bare_shipit_file
 
   def authentication_disabled?
     ENV['SHIPIT_DISABLE_AUTH'].present?
@@ -102,6 +106,50 @@ module Shipit
       reconnect_delay: 0.5,
       reconnect_delay_max: 1,
     )
+  end
+
+  module SafeJSON
+    class << self
+      def load(serial)
+        return nil if serial.nil?
+        # JSON.load is unsafe, we should use parse instead
+        JSON.parse(serial)
+      end
+
+      def dump(object)
+        JSON.dump(object)
+      end
+    end
+  end
+
+  module TransitionalSerializer
+    SafeYAML = Paquito::SafeYAML.new(deprecated_classes: ["ActiveSupport::HashWithIndifferentAccess"])
+
+    class << self
+      def load(serial)
+        return if serial.nil?
+
+        JSON.parse(serial)
+      rescue JSON::ParserError
+        SafeYAML.load(serial)
+      end
+
+      def dump(object)
+        return if object.nil?
+        JSON.dump(object)
+      end
+    end
+  end
+
+  self.database_serializer = TransitionalSerializer
+
+  def serialized_column(attribute_name, type: nil, coder: nil)
+    column = Paquito::SerializedColumn.new(database_serializer, type, attribute_name: attribute_name)
+    if coder
+      Paquito.chain(coder, column)
+    else
+      column
+    end
   end
 
   def github(organization: github_default_organization)
@@ -153,7 +201,11 @@ module Shipit
   end
 
   def user_access_tokens_key
-    (secrets.user_access_tokens_key.presence || secrets.secret_key_base).byteslice(0, 32)
+    if secrets.user_access_tokens_key.present?
+      secrets.user_access_tokens_key
+    elsif secrets.secret_key_base
+      Digest::SHA256.digest("user_access_tokens_key" + secrets.secret_key_base)
+    end
   end
 
   def host

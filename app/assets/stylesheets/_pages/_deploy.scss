@@ -67,7 +67,8 @@
 }
 
 .deploy-banner {
-  height: 4rem;
+  min-height: 4rem;
+  height: auto;
   background-color: #f0f4f7;
   display: flex;
   justify-content: center;
@@ -196,8 +197,6 @@
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 20px;
-  padding-left: 15px;
 }
 
 .commit-checks {

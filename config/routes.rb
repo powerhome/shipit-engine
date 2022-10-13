@@ -20,6 +20,7 @@ Shipit::Engine.routes.draw do
       get '/' => 'stacks#show'
       delete '/' => 'stacks#destroy'
       patch '/' => 'stacks#update'
+      post '/refresh' => 'stacks#refresh'
     end
 
     scope '/stacks/*stack_id', stack_id: stack_id_format, as: :stack do
@@ -27,6 +28,9 @@ Shipit::Engine.routes.draw do
       resource :lock, only: %i(create update destroy)
       resources :tasks, only: %i(index show) do
         resource :output, only: :show
+        member do
+          put :abort
+        end
       end
       resources :deploys, only: %i(index create) do
         resources :release_statuses, only: %i(create)

@@ -14,8 +14,8 @@ In the future we'd like to provide it fully packaged inside a Docker container, 
 
 Shipit provides you with a Rails template. To bootstrap your Shipit installation:
 
-1. If you don't have Rails installed, run this command: `gem install rails -v 6.1`
-2. Run this command:  `rails _6.1_ new shipit --skip-action-cable --skip-turbolinks --skip-action-mailer --skip-active-storage --skip-webpack-install --skip-action-mailbox --skip-action-text -m https://raw.githubusercontent.com/Shopify/shipit-engine/master/template.rb`
+1. If you don't have Rails installed, run this command: `gem install rails -v 7.0`
+2. Run this command:  `rails _7.0_ new shipit --skip-action-cable --skip-turbolinks --skip-action-mailer --skip-active-storage --skip-webpack-install --skip-action-mailbox --skip-action-text -m https://raw.githubusercontent.com/Shopify/shipit-engine/master/template.rb`
 
 ## Creating the GitHub App
 
@@ -28,22 +28,26 @@ You can create a new one for your organization at `https://github.com/organizati
   - Setup URL: Leave it empty.
   - Webhook URL: It must be set to `<homepage>/webhooks`, e.g. `https://example.com/webhooks`.
   - Webhook secret (optional): Fill it with some randomly generated string, and *keep it in clear on the side, you'll need it later*.
-  - Permissions:
-    - Repository metadata: Read-only
-    - Commit statuses: Read-only
+  - Repository permissions:
     - Checks: Read & write
+    - Commit statuses: Read-only
+    - Contents: Read & write (to allow merging)
     - Deployments: Read & write
-    - Pull requests: Read & write
-    - Organization members: Read-only
-    - Repository contents: Read & write (to allow merging)
     - Issues: Read & write (to allow closing related issues on merge)
+    - Metadata: Read-only
+    - Pull requests: Read & write
+
+  - Organization permissions:
+    - Members: Read-only
+    
   - Events:
-    - Status
+    - Check run
+    - Check suite
+    - Membership
     - Pull request
     - Push
-    - Membership
-    - Check suite
-    - Check run
+    - Status
+
 
 ## Installing the GitHub App on your organization
 

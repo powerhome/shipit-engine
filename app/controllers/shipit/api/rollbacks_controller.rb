@@ -8,6 +8,7 @@ module Shipit
         requires :sha, String, length: { in: 6..40 }
         accepts :force, Boolean, default: false
         accepts :env, Hash, default: {}
+        accepts :lock, Boolean, default: true
       end
       def create
         commit = stack.commits.by_sha(params.sha) || param_error!(:sha, 'Unknown revision')
@@ -20,10 +21,10 @@ module Shipit
           param_error!(:force, "Can't rollback, deploy in progress")
         elsif stack.active_task?
           active_task = stack.active_task
-          active_task.abort!(aborted_by: current_user, rollback_once_aborted_to: deploy)
+          active_task.abort!(aborted_by: current_user, rollback_once_aborted_to: deploy, rollback_once_aborted: true)
           response = active_task
         else
-          response = deploy.trigger_rollback(current_user, env: deploy_env, force: params.force)
+          response = deploy.trigger_rollback(current_user, env: deploy_env, force: params.force, lock: params.lock)
         end
 
         render_resource(response, status: :accepted)

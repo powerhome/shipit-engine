@@ -3,7 +3,7 @@ require 'test_helper'
 
 module Shipit
   module Api
-    class HooksControllerTest < ActionController::TestCase
+    class HooksControllerTest < ApiControllerTestCase
       setup do
         authenticate!
         @stack = shipit_stacks(:shipit)
@@ -61,7 +61,7 @@ module Shipit
         post :create, params: {
           delivery_url: 'https://example.com/hook',
           events: %w(deploy rollback),
-          created_at: 2.months.ago.to_s(:db),
+          created_at: 2.months.ago.to_formatted_s(:db),
         }
         Hook.last.created_at > 2.seconds.ago
       end

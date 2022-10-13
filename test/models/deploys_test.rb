@@ -459,6 +459,32 @@ module Shipit
       end
     end
 
+    test "transitioning to aborted locks the stack if a rollback is scheduled" do
+      refute @stack.locked?
+
+      @deploy = shipit_deploys(:shipit_running)
+      @deploy.ping
+      @deploy.pid = 42
+      @deploy.abort!(rollback_once_aborted: true, aborted_by: @user)
+      @deploy.aborted!
+
+      assert_predicate @stack.reload, :locked?
+      assert_equal @user, @stack.lock_author
+    end
+
+    test "transitioning to aborted emits a lock hook if a rollback is scheduled" do
+      refute_predicate @stack, :locked?
+
+      @deploy = shipit_deploys(:shipit_running)
+      @deploy.ping
+      @deploy.pid = 42
+      @deploy.abort!(rollback_once_aborted: true, aborted_by: @user)
+
+      expect_hook(:lock, @stack, locked: true, lock_details: nil, stack: @stack) do
+        @deploy.aborted!
+      end
+    end
+
     test "#build_rollback returns an unsaved record" do
       assert @deploy.build_rollback.new_record?
     end
@@ -802,6 +828,12 @@ module Shipit
       assert_equal @user, @stack.lock_author
     end
 
+    test "#trigger_rollback does not lock the stack if not requested" do
+      refute @stack.locked?
+      @deploy.trigger_rollback(@user, lock: false)
+      refute @stack.reload.locked?
+    end
+
     test "#trigger_rollback marks the rollback as `ignored_safeties` if the force option was used" do
       rollback = @deploy.trigger_rollback(@user, force: true)
       assert_predicate rollback, :ignored_safeties?
@@ -1022,6 +1054,28 @@ module Shipit
 
         assert_equal 'success', @rollback_to_deploy.status
       end
+    end
+
+    test "manually triggered rollbacks sets rollbacked deploys as faulty and not the rollback task" do
+      @deploy = shipit_deploys(:canaries_validating)
+      @middle_deploy = shipit_deploys(:canaries_faulty)
+      @rollback_to_deploy = shipit_deploys(:canaries_success)
+
+      @rollback_task = @rollback_to_deploy.trigger_rollback(force: true)
+
+      @rollback_task.run!
+      @rollback_task.complete!
+      @rollback_task.reload
+      @deploy.reload
+      @middle_deploy.reload
+
+      assert_equal 'faulty', @deploy.status
+      assert_equal 'failure', @deploy.last_release_status.state
+
+      assert_equal 'faulty', @middle_deploy.status
+      assert_equal 'failure', @middle_deploy.last_release_status.state
+
+      assert_equal 'success', @rollback_task.status
     end
 
     test "succeeding a deploy creates CommitDeploymentStatuses" do

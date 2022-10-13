@@ -27,7 +27,7 @@ module Shipit
 
       command = @commands.fetch
 
-      assert_equal %w(git fetch origin --tags master), command.args
+      assert_equal %w(git fetch origin --quiet --tags master), command.args
     end
 
     test "#fetch calls git fetch in git_path directory if repository cache already exist" do
@@ -44,7 +44,7 @@ module Shipit
 
       command = @commands.fetch
 
-      expected = %W(git clone --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
+      expected = %W(git clone --quiet --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
       assert_equal expected, command.args.map(&:to_s)
     end
 
@@ -54,7 +54,7 @@ module Shipit
 
       command = @commands.fetch
 
-      expected = %W(git clone --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
+      expected = %W(git clone --quiet --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
       assert_equal expected, command.args
     end
 
@@ -67,7 +67,7 @@ module Shipit
 
       command = @commands.fetch
 
-      expected = %W(git clone --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
+      expected = %W(git clone --quiet --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
       assert_equal expected, command.args
     end
 
@@ -81,7 +81,7 @@ module Shipit
 
       command = @commands.fetch
 
-      expected = %W(git clone --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
+      expected = %W(git clone --quiet --single-branch --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
       assert_equal expected, command.args
     end
 
@@ -91,7 +91,7 @@ module Shipit
 
       command = @commands.fetch
 
-      expected = %W(git clone --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
+      expected = %W(git clone --quiet --recursive --branch master #{@stack.repo_git_url} #{@stack.git_path})
       assert_equal expected, command.args.map(&:to_s)
     end
 
@@ -121,7 +121,7 @@ module Shipit
       clone_args = [
         'git', 'clone', '--quiet',
         '--local', '--origin', 'cache',
-        @stack.git_path.to_s, @deploy.working_directory
+        @stack.git_path.to_s, @deploy.working_directory,
       ]
       assert_equal clone_args, commands.first.args
       assert_equal ['git', 'remote', 'add', 'origin', @stack.repo_git_url.to_s], commands.second.args
@@ -134,7 +134,11 @@ module Shipit
 
     test "#checkout checks out the deployed commit" do
       command = @commands.checkout(@deploy.until_commit)
-      assert_equal ['git', 'checkout', @deploy.until_commit.sha], command.args
+      checkout_args = [
+        'git', '-c', 'advice.detachedHead=false', 'checkout', '--quiet',
+        @deploy.until_commit.sha,
+      ]
+      assert_equal checkout_args, command.args
     end
 
     test "#checkout checks out the deployed commit from the working directory" do

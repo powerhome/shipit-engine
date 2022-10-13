@@ -216,19 +216,24 @@ module Shipit
     end
 
     test "users with legacy encrypted access token get their token reset automatically" do
-      # See: https://github.com/attr-encrypted/attr_encrypted/blob/53266da546a21afaa1f1b93a461b912f4ccf363b/README.md#upgrading-from-attr_encrypted-v2x-to-v3x
       legacy = shipit_users(:legacy)
-      assert_not_nil legacy.encrypted_github_access_token
-      assert_not_nil legacy.encrypted_github_access_token_iv
-
       assert_nil legacy.github_access_token
-      legacy.reload
-      assert_nil legacy.encrypted_github_access_token
-      assert_nil legacy.encrypted_github_access_token_iv
 
-      legacy.update!(github_access_token: 't0k3n')
+      legacy.update!(github_access_token: 'ghu_t0k3n')
+      assert_equal 'ghu_t0k3n', legacy.github_access_token
+    end
+
+    test "users with legacy encrypted access token can be updated" do
+      legacy = shipit_users(:legacy)
+      legacy.update!(github_access_token: 'ghu_t0k3n')
       legacy.reload
-      assert_equal 't0k3n', legacy.github_access_token
+      assert_equal 'ghu_t0k3n', legacy.github_access_token
+    end
+
+    test "users with legacy encrypted access token can have unrelated attributes updated" do
+      legacy = shipit_users(:legacy)
+      legacy.update!(name: 'Test')
+      assert_equal 'Test', legacy.name
     end
 
     test "users are always logged_in?" do
@@ -272,6 +277,21 @@ module Shipit
       )
       found_user = Shipit::User.find_or_create_author_from_github_commit(github_commit)
       assert_equal user, found_user
+    end
+
+    test "requires_fresh_login? defaults to false" do
+      u = User.new
+      refute_predicate u, :requires_fresh_login?
+    end
+
+    test "requires_fresh_login? is true for users with legacy github_access_token" do
+      @user.update!(github_access_token: 'some_legacy_value')
+      assert_predicate @user, :requires_fresh_login?
+    end
+
+    test "requires_fresh_login? is false for users with a new format github_access_token" do
+      @user.update!(github_access_token: 'ghu_tok3n')
+      refute_predicate @user, :requires_fresh_login?
     end
 
     private
