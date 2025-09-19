@@ -30,7 +30,7 @@ module Shipit
       begin
         find_or_create_from_github(github_commit.committer.presence || github_commit.commit.committer.presence)
       rescue Octokit::NotFound
-        find_or_create_from_github(Shipit::AnonymousUser.new)
+        AnonymousUser.new
       end
     end
 
