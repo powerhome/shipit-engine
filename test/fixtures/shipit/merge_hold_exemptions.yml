@@ -1,0 +1,7 @@
+shipit_active_walrus:
+  merge_hold: shipit_active
+  github_login: walrus
+
+shipit_active_bot:
+  merge_hold: shipit_active
+  github_login: dependabot

@@ -49,6 +49,28 @@
   </div>
 <% end %>
 
+<% if (active_hold = stack.active_merge_hold) %>
+  <div class="banner banner--orange">
+    <div class="banner__inner wrapper">
+      <div class="banner__content">
+        <h2 class="banner__title">
+          <i class="icon icon--lock"></i>
+          Merges are held by <%= active_hold.author.name %>
+          <% if active_hold.activated_at %>
+            <%= timeago_tag(active_hold.activated_at, force: true) %>
+          <% end %>
+        </h2>
+        <p class="banner__text">
+          <%= auto_link emojify(active_hold.reason) %>
+        </p>
+        <p class="banner__text">
+          <%= link_to 'View merge holds', stack_merge_holds_path(stack), class: 'banner__btn btn' %>
+        </p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <% if stack.awaiting_provision? %>
   <div class="banner banner--orange">
     <div class="banner__inner wrapper">

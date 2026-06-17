@@ -74,6 +74,7 @@ module Shipit
       deploy
       rollback
       lock
+      merge_hold
       commit_status
       deployable_status
       merge_status

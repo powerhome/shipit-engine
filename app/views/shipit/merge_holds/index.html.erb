@@ -1,0 +1,53 @@
+<%= render partial: 'shipit/stacks/header', locals: { stack: @stack } %>
+
+<div class="wrapper">
+  <section>
+    <header class="section-header">
+      <h2>Merge Holds</h2>
+      <%= link_to 'New merge hold', new_stack_merge_hold_path(@stack), class: 'btn' %>
+    </header>
+
+    <% if @merge_holds.empty? %>
+      <p>No merge holds have been created for this stack.</p>
+    <% else %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Author</th>
+            <th>Reason</th>
+            <th>Created</th>
+            <th>Starts at</th>
+            <th>Ends at</th>
+            <th>Activated</th>
+            <th>Deactivated</th>
+            <th>Revoked</th>
+            <th>Exempt users</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @merge_holds.each do |hold| %>
+            <tr>
+              <td><%= hold.status.humanize %></td>
+              <td><%= hold.author.name %></td>
+              <td><%= auto_link emojify(hold.reason) %></td>
+              <td><%= timeago_tag(hold.created_at) %></td>
+              <td><%= hold.starts_at ? timeago_tag(hold.starts_at) : '—' %></td>
+              <td><%= hold.ends_at ? timeago_tag(hold.ends_at) : '—' %></td>
+              <td><%= hold.activated_at ? timeago_tag(hold.activated_at) : '—' %></td>
+              <td><%= hold.deactivated_at ? timeago_tag(hold.deactivated_at) : '—' %></td>
+              <td><%= hold.revoked_at ? "#{hold.revoked_by&.name} #{time_ago_in_words(hold.revoked_at)} ago" : '—' %></td>
+              <td><%= hold.exempt_github_logins.join(', ').presence || '—' %></td>
+              <td>
+                <% if hold.active? || hold.scheduled? %>
+                  <%= button_to 'Revoke', revoke_stack_merge_hold_path(@stack, hold), method: :post, class: 'btn btn--warning', data: { confirm: 'Revoke this merge hold?' } %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+</div>

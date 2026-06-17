@@ -1,0 +1,46 @@
+<% content_for :page_title do %>
+  <h1>Active Merge Holds</h1>
+<% end %>
+
+<div class="wrapper">
+  <section>
+    <header class="section-header">
+      <h2>Active Merge Holds Across All Stacks</h2>
+    </header>
+
+    <% if @merge_holds.empty? %>
+      <p>There are no active merge holds.</p>
+    <% else %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Stack</th>
+            <th>Author</th>
+            <th>Reason</th>
+            <th>Activated</th>
+            <th>Ends at</th>
+            <th>Exempt users</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @merge_holds.each do |hold| %>
+            <tr>
+              <td>
+                <%= link_to "#{hold.stack.repo_owner}/#{hold.stack.repo_name} (#{hold.stack.environment})", stack_merge_holds_path(hold.stack) %>
+              </td>
+              <td><%= hold.author.name %></td>
+              <td><%= auto_link emojify(hold.reason) %></td>
+              <td><%= hold.activated_at ? timeago_tag(hold.activated_at) : '—' %></td>
+              <td><%= hold.ends_at ? timeago_tag(hold.ends_at) : '—' %></td>
+              <td><%= hold.exempt_github_logins.join(', ').presence || '—' %></td>
+              <td>
+                <%= link_to 'View', stack_merge_hold_path(hold.stack, hold) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </section>
+</div>

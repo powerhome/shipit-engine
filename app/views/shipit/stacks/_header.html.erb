@@ -25,6 +25,9 @@
     <li class="nav__list__item">
       <%= link_to 'Repository', repository_path(stack.repository) %>
     </li>
+    <li class="nav__list__item">
+      <%= link_to 'Merge Holds', stack_merge_holds_path(stack) %>
+    </li>
     <% if stack.merge_queue_enabled? %>
       <li class="nav__list__item">
         <%= link_to t('stack.nav.merge_queue', count: stack.merge_requests.queued.count), stack_merge_requests_path(stack) %>
