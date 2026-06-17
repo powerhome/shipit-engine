@@ -53,6 +53,7 @@ require 'shipit/github_http_cache_middleware'
 require 'shipit/same_site_cookie_middleware'
 require 'shipit/cast_value'
 require 'shipit/line_buffer'
+require 'shipit/merge_hold_enforcer'
 
 SafeYAML::OPTIONS[:default_mode] = :safe
 SafeYAML::OPTIONS[:deserialize_symbols] = false
@@ -223,6 +224,10 @@ module Shipit
 
   def default_merge_method
     secrets.default_merge_method || 'merge'
+  end
+
+  def merge_hold_ruleset_name
+    secrets.merge_hold_ruleset_name.presence || 'Shipit Merge Hold'
   end
 
   def update_latest_deployed_ref

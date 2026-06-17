@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_07_203053) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_17_195501) do
   create_table "api_clients", force: :cascade do |t|
     t.text "permissions", limit: 65535
     t.integer "creator_id", limit: 4
@@ -164,6 +164,33 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_07_203053) do
     t.datetime "updated_at", null: false
     t.index ["team_id", "user_id"], name: "index_memberships_on_team_id_and_user_id", unique: true
     t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "merge_hold_exemptions", force: :cascade do |t|
+    t.integer "merge_hold_id", null: false
+    t.string "github_login", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["merge_hold_id", "github_login"], name: "index_merge_hold_exemptions_on_hold_and_login", unique: true
+    t.index ["merge_hold_id"], name: "index_merge_hold_exemptions_on_merge_hold_id"
+  end
+
+  create_table "merge_holds", force: :cascade do |t|
+    t.integer "stack_id", null: false
+    t.integer "author_id", null: false
+    t.integer "revoked_by_id"
+    t.text "reason", null: false
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.datetime "activated_at"
+    t.datetime "deactivated_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_merge_holds_on_author_id"
+    t.index ["revoked_by_id"], name: "index_merge_holds_on_revoked_by_id"
+    t.index ["stack_id", "activated_at", "deactivated_at", "revoked_at"], name: "index_merge_holds_on_stack_and_status"
+    t.index ["stack_id"], name: "index_merge_holds_on_stack_id"
   end
 
   create_table "merge_requests", force: :cascade do |t|

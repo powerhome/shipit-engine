@@ -7,6 +7,8 @@ namespace :cron do
     Shipit::Stack.schedule_continuous_delivery
     Shipit::GithubStatus.refresh_status
     Shipit::MergeRequest.schedule_merges
+    Shipit::MergeHold.activate_due!
+    Shipit::MergeHold.deactivate_expired!
     Shipit::ReapDeadTasksJob.perform_later
     Shipit::ReviewStackProvisioningQueue.work
   end

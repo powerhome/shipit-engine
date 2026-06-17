@@ -39,6 +39,7 @@ module Shipit
     has_many :github_hooks, dependent: :destroy, class_name: 'Shipit::GithubHook::Repo'
     has_many :hooks, dependent: :destroy
     has_many :api_clients, dependent: :destroy
+    has_many :merge_holds, dependent: :destroy
     has_one :continuous_delivery_schedule, dependent: :destroy
     belongs_to :lock_author, class_name: :User, optional: true
     belongs_to :repository
@@ -479,6 +480,14 @@ module Shipit
 
     def unlock
       update!(lock_reason: nil, lock_author: nil, locked_since: nil)
+    end
+
+    def active_merge_hold
+      merge_holds.active.first
+    end
+
+    def merge_hold_active?
+      merge_holds.active.exists?
     end
 
     def archived?

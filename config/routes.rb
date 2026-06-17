@@ -39,11 +39,17 @@ Shipit::Engine.routes.draw do
       resources :rollbacks, only: %i[create]
       resources :commits, only: %i[index]
       resources :merge_requests, only: %i[index show update destroy]
+      resources :merge_holds, only: %i[index create show] do
+        member do
+          post :revoke
+        end
+      end
       post '/task/:task_name' => 'tasks#trigger', as: :trigger_task
       resources :hooks, only: %i[index create show update destroy]
     end
 
     resources :hooks, only: %i[index create show update destroy]
+    get '/merge_holds' => 'merge_holds#global_index', as: :global_merge_holds
   end
 
   scope '/ccmenu/*stack_id', stack_id: stack_id_format, as: :ccmenu_url do
@@ -75,6 +81,7 @@ Shipit::Engine.routes.draw do
   end
 
   resources :stacks, only: %i[new create index]
+  get '/merge_holds' => 'merge_holds#global_index', as: :global_merge_holds
   scope '/*id', id: stack_id_format, as: :stack do
     get '/' => 'stacks#show'
     patch '/' => 'stacks#update'
@@ -125,6 +132,11 @@ Shipit::Engine.routes.draw do
     end
 
     resources :merge_requests, only: %i[index destroy create]
+    resources :merge_holds, only: %i[index create show new] do
+      member do
+        post :revoke
+      end
+    end
   end
   get '/stacks/:id' => 'stacks#lookup'
 
