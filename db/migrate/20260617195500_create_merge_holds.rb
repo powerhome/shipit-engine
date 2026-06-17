@@ -2,7 +2,7 @@ class CreateMergeHolds < ActiveRecord::Migration[7.1]
   def change
     create_table(:merge_holds) do |t|
       t.references(:stack, null: false, index: true)
-      t.references(:author, null: false, index: true)
+      t.references(:author, null: true, index: true)
       t.references(:revoked_by, null: true, index: true)
       t.text(:reason, null: false)
       t.datetime(:starts_at, null: true)

@@ -1,0 +1,52 @@
+<%= render partial: 'shipit/stacks/header', locals: { stack: @stack } %>
+
+<div class="wrapper">
+  <section>
+    <header class="section-header">
+      <h2>Merge Hold #<%= @merge_hold.id %></h2>
+      <%= link_to 'Back to merge holds', stack_merge_holds_path(@stack) %>
+    </header>
+
+    <dl>
+      <dt>Status</dt>
+      <dd><%= @merge_hold.status.humanize %></dd>
+
+      <dt>Author</dt>
+      <dd><%= @merge_hold.author.name %></dd>
+
+      <dt>Reason</dt>
+      <dd><%= auto_link emojify(@merge_hold.reason) %></dd>
+
+      <dt>Created</dt>
+      <dd><%= timeago_tag(@merge_hold.created_at) %></dd>
+
+      <dt>Starts at</dt>
+      <dd><%= @merge_hold.starts_at ? timeago_tag(@merge_hold.starts_at) : '—' %></dd>
+
+      <dt>Ends at</dt>
+      <dd><%= @merge_hold.ends_at ? timeago_tag(@merge_hold.ends_at) : '—' %></dd>
+
+      <dt>Activated</dt>
+      <dd><%= @merge_hold.activated_at ? timeago_tag(@merge_hold.activated_at) : '—' %></dd>
+
+      <dt>Deactivated</dt>
+      <dd><%= @merge_hold.deactivated_at ? timeago_tag(@merge_hold.deactivated_at) : '—' %></dd>
+
+      <dt>Revoked</dt>
+      <dd>
+        <% if @merge_hold.revoked_at %>
+          By <%= @merge_hold.revoked_by&.name %> <%= timeago_tag(@merge_hold.revoked_at) %>
+        <% else %>
+          —
+        <% end %>
+      </dd>
+
+      <dt>Exempt users</dt>
+      <dd><%= @merge_hold.exempt_github_logins.join(', ').presence || '—' %></dd>
+    </dl>
+
+    <% if @merge_hold.active? || @merge_hold.scheduled? %>
+      <%= button_to 'Revoke', revoke_stack_merge_hold_path(@stack, @merge_hold), method: :post, class: 'btn btn--warning', data: { confirm: 'Revoke this merge hold?' } %>
+    <% end %>
+  </section>
+</div>

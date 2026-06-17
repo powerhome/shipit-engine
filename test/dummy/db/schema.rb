@@ -177,7 +177,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_17_195501) do
 
   create_table "merge_holds", force: :cascade do |t|
     t.integer "stack_id", null: false
-    t.integer "author_id", null: false
+    t.integer "author_id"
     t.integer "revoked_by_id"
     t.text "reason", null: false
     t.datetime "starts_at"

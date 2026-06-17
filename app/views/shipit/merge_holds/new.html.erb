@@ -1,0 +1,50 @@
+<%= render partial: 'shipit/stacks/header', locals: { stack: @stack } %>
+
+<div class="wrapper">
+  <section>
+    <header class="section-header">
+      <h2>New Merge Hold</h2>
+    </header>
+
+    <% if @merge_hold.errors.any? %>
+      <div class="validation-errors">
+        <p>Validation errors prevented your merge hold from being saved</p>
+        <ul>
+          <% @merge_hold.errors.full_messages.each do |full_message| %>
+            <li><%= full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_for(@merge_hold, url: stack_merge_holds_path(@stack)) do |f| %>
+      <div class="field-wrapper">
+        <%= f.label :reason %>
+        <%= f.text_area :reason, rows: 4, required: true %>
+      </div>
+
+      <div class="field-wrapper">
+        <%= f.label :starts_at, 'Starts at (optional)' %>
+        <%= f.datetime_field :starts_at %>
+        <p class="hint">Leave blank to activate immediately. Times are in <%= Time.zone.name %>.</p>
+      </div>
+
+      <div class="field-wrapper">
+        <%= f.label :ends_at, 'Ends at (optional)' %>
+        <%= f.datetime_field :ends_at %>
+        <p class="hint">Leave blank to keep until manually revoked.</p>
+      </div>
+
+      <div class="field-wrapper">
+        <%= f.label :exempt_github_logins, 'Exempt GitHub users (optional)' %>
+        <%= f.text_field :exempt_github_logins, placeholder: 'comma or space separated GitHub logins' %>
+        <p class="hint">These users will be able to merge despite the hold.</p>
+      </div>
+
+      <div class="field-wrapper">
+        <%= f.submit 'Create merge hold', class: 'btn' %>
+        <%= link_to 'Cancel', stack_merge_holds_path(@stack) %>
+      </div>
+    <% end %>
+  </section>
+</div>

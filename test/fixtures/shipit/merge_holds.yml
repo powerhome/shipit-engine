@@ -1,0 +1,27 @@
+shipit_active:
+  stack: shipit
+  author: walrus
+  reason: 'Investigating production issue'
+  activated_at: <%= 1.hour.ago.to_fs(:db) %>
+
+shipit_scheduled:
+  stack: shipit
+  author: walrus
+  reason: 'Scheduled deploy freeze'
+  starts_at: <%= 1.day.from_now.to_fs(:db) %>
+  ends_at: <%= 2.days.from_now.to_fs(:db) %>
+
+shipit_revoked:
+  stack: shipit
+  author: walrus
+  revoked_by: walrus
+  reason: 'Earlier merge hold (revoked)'
+  activated_at: <%= 2.days.ago.to_fs(:db) %>
+  deactivated_at: <%= 1.day.ago.to_fs(:db) %>
+  revoked_at: <%= 1.day.ago.to_fs(:db) %>
+
+cyclimse_active:
+  stack: cyclimse
+  author: bob
+  reason: 'Another active hold on cyclimse'
+  activated_at: <%= 30.minutes.ago.to_fs(:db) %>

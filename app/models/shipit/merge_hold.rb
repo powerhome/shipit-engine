@@ -3,13 +3,25 @@
 module Shipit
   class MergeHold < Record
     belongs_to :stack
-    belongs_to :author, class_name: 'User'
+    belongs_to :author, class_name: 'User', optional: true
     belongs_to :revoked_by, class_name: 'User', optional: true
 
     has_many :exemptions, class_name: 'MergeHoldExemption', dependent: :destroy
 
     validates :reason, presence: true
     validate :starts_at_before_ends_at
+
+    def author(*)
+      super || AnonymousUser.new
+    end
+
+    def author=(user)
+      super(user&.logged_in? ? user : nil)
+    end
+
+    def revoked_by=(user)
+      super(user&.logged_in? ? user : nil)
+    end
 
     after_commit :emit_hooks
     after_commit :enforce_async
@@ -100,7 +112,7 @@ module Shipit
     end
 
     def emit_hooks
-      Hook.emit(:merge_hold, stack, merge_hold: self, status: status)
+      Hook.emit(:merge_hold, stack, merge_hold: self, status:)
     end
 
     def enforce_async

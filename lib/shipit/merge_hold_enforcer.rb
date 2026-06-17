@@ -72,7 +72,7 @@ module Shipit
         next if actor_id.nil?
 
         {
-          actor_id: actor_id,
+          actor_id:,
           actor_type: 'Integration',
           bypass_mode: 'always'
         }
